@@ -1,0 +1,201 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="mapper">
+
+    <insert id="insertUser" parameterType="com.kotoumi.sifcap.model.po.User">
+        insert into user set user_id = #{userId}
+        <if test="name != null">
+            , name = #{name}
+        </if>
+        <if test="level != null">
+            , level = #{level}
+        </if>
+        <if test="exp != null">
+            , exp = #{exp}
+        </if>
+        <if test="previousExp != null">
+            , previous_exp = #{previousExp}
+        </if>
+        <if test="nextExp != null">
+            , next_exp = #{nextExp}
+        </if>
+        <if test="gameCoin != null">
+            , game_coin = #{gameCoin}
+        </if>
+        <if test="snsCoin != null">
+            , sns_coin = #{snsCoin}
+        </if>
+        <if test="freeSnsCoin != null">
+            , free_sns_coin = #{freeSnsCoin}
+        </if>
+        <if test="paidSnsCoin != null">
+            , paid_sns_coin = #{paidSnsCoin}
+        </if>
+        <if test="socialPoint != null">
+            , social_point = #{socialPoint}
+        </if>
+        <if test="unitMax != null">
+            , unit_max = #{unitMax}
+        </if>
+        <if test="waitingUnitMax != null">
+            , waiting_unit_max = #{waitingUnitMax}
+        </if>
+        <if test="currentEnergy != null">
+            , current_energy = #{currentEnergy}
+        </if>
+        <if test="energyMax != null">
+            , energy_max = #{energyMax}
+        </if>
+        <if test="energyFullTime != null">
+            , energy_full_time = #{energyFullTime}
+        </if>
+        <if test="energyFullNeedTime != null">
+            , energy_full_need_time = #{energyFullNeedTime}
+        </if>
+        <if test="overMaxEnergy != null">
+            , over_max_energy = #{overMaxEnergy}
+        </if>
+        <if test="trainingEnergy != null">
+            , training_energy = #{trainingEnergy}
+        </if>
+        <if test="trainingEnergyMax != null">
+            , training_energy_max = #{trainingEnergyMax}
+        </if>
+        <if test="friendMax != null">
+            , friend_max = #{friendMax}
+        </if>
+        <if test="inviteCode != null">
+            , invite_code = #{inviteCode}
+        </if>
+        <if test="unlockRandomLiveMuse != null">
+            , unlock_random_live_muse = #{unlockRandomLiveMuse}
+        </if>
+        <if test="unlockRandomLiveAqours != null">
+            , unlock_random_live_aqours = #{unlockRandomLiveAqours}
+        </if>
+        <if test="insertDate != null">
+            , insert_date = #{insertDate}
+        </if>
+        <if test="updateDate != null">
+            , update_date = #{updateDate}
+        </if>
+        <if test="tutorialState != null">
+            , tutorial_state = #{tutorialState}
+        </if>
+        <if test="diamondCoin != null">
+            , diamond_coin = #{diamondCoin}
+        </if>
+        <if test="crystalCoin != null">
+            , crystal_coin = #{crystalCoin}
+        </if>
+        <if test="birthMonth != null">
+            , birth_month = #{birthMonth}
+        </if>
+        <if test="birthDay != null">
+            , birth_day = #{birthDay}
+        </if>
+    </insert>
+
+    <select id="findUser" parameterType="int" resultType="com.kotoumi.sifcap.model.po.User">
+        select * from user where user_id = #{userId}
+    </select>
+
+    <update id="updateUser">
+        update user set user_id = #{userId}
+        <if test="name != null">
+            , name = #{name}
+        </if>
+        <if test="level != null">
+            , level = #{level}
+        </if>
+        <if test="exp != null">
+            , exp = #{exp}
+        </if>
+        <if test="previousExp != null">
+            , previous_exp = #{previousExp}
+        </if>
+        <if test="nextExp != null">
+            , next_exp = #{nextExp}
+        </if>
+        <if test="gameCoin != null">
+            , game_coin = #{gameCoin}
+        </if>
+        <if test="snsCoin != null">
+            , sns_coin = #{snsCoin}
+        </if>
+        <if test="freeSnsCoin != null">
+            , free_sns_coin = #{freeSnsCoin}
+        </if>
+        <if test="paidSnsCoin != null">
+            , paid_sns_coin = #{paidSnsCoin}
+        </if>
+        <if test="socialPoint != null">
+            , social_point = #{socialPoint}
+        </if>
+        <if test="unitMax != null">
+            , unit_max = #{unitMax}
+        </if>
+        <if test="waitingUnitMax != null">
+            , waiting_unit_max = #{waitingUnitMax}
+        </if>
+        <if test="currentEnergy != null">
+            , current_energy = #{currentEnergy}
+        </if>
+        <if test="energyMax != null">
+            , energy_max = #{energyMax}
+        </if>
+        <if test="energyFullTime != null">
+            , energy_full_time = #{energyFullTime}
+        </if>
+        <if test="energyFullNeedTime != null">
+            , energy_full_need_time = #{energyFullNeedTime}
+        </if>
+        <if test="overMaxEnergy != null">
+            , over_max_energy = #{overMaxEnergy}
+        </if>
+        <if test="trainingEnergy != null">
+            , training_energy = #{trainingEnergy}
+        </if>
+        <if test="trainingEnergyMax != null">
+            , training_energy_max = #{trainingEnergyMax}
+        </if>
+        <if test="friendMax != null">
+            , friend_max = #{friendMax}
+        </if>
+        <if test="inviteCode != null">
+            , invite_code = #{inviteCode}
+        </if>
+        <if test="unlockRandomLiveMuse != null">
+            , unlock_random_live_muse = #{unlockRandomLiveMuse}
+        </if>
+        <if test="unlockRandomLiveAqours != null">
+            , unlock_random_live_aqours = #{unlockRandomLiveAqours}
+        </if>
+        <if test="insertDate != null">
+            , insert_date = #{insertDate}
+        </if>
+        <if test="updateDate != null">
+            , update_date = #{updateDate}
+        </if>
+        <if test="tutorialState != null">
+            , tutorial_state = #{tutorialState}
+        </if>
+        <if test="diamondCoin != null">
+            , diamond_coin = #{diamondCoin}
+        </if>
+        <if test="crystalCoin != null">
+            , crystal_coin = #{crystalCoin}
+        </if>
+        <if test="birthMonth != null">
+            , birth_month = #{birthMonth}
+        </if>
+        <if test="birthDay != null">
+            , birth_day = #{birthDay}
+        </if>
+        where user_id = #{userId}
+    </update>
+
+</mapper>

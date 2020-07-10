@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="mapper">
+
+    <insert id="insertLivePlay" parameterType="com.kotoumi.sifcap.model.po.LivePlay">
+        insert into live_play set user_id = #{userId}
+        <if test="liveDifficultyId != null">
+            , live_difficulty_id = #{liveDifficultyId}
+        </if>
+        <if test="perfectCnt != null">
+            , perfect_cnt = #{perfectCnt}
+        </if>
+        <if test="greatCnt != null">
+            , great_cnt = #{greatCnt}
+        </if>
+        <if test="goodCnt != null">
+            , good_cnt = #{goodCnt}
+        </if>
+        <if test="badCnt != null">
+            , bad_cnt = #{badCnt}
+        </if>
+        <if test="missCnt != null">
+            , miss_cnt = #{missCnt}
+        </if>
+        <if test="maxCombo != null">
+            , max_combo = #{maxCombo}
+        </if>
+        <if test="scoreSmile != null">
+            , score_smile = #{scoreSmile}
+        </if>
+        <if test="scoreCute != null">
+            , score_cute = #{scoreCute}
+        </if>
+        <if test="scoreCool != null">
+            , score_cool = #{scoreCool}
+        </if>
+        <if test="eventId != null">
+            , event_id = #{eventId}
+        </if>
+        <if test="loveCnt != null">
+            , love_cnt = #{loveCnt}
+        </if>
+        <if test="expCnt != null">
+            , exp_cnt = #{expCnt}
+        </if>
+        <if test="gameCoinCnt != null">
+            , game_coin_cnt = #{gameCoinCnt}
+        </if>
+        <if test="socialPointCnt != null">
+            , social_point_cnt = #{socialPointCnt}
+        </if>
+        <if test="unitList != null">
+            , unit_list = #{unitList}
+        </if>
+        <if test="playTime != null">
+            , play_time = #{playTime}
+        </if>
+    </insert>
+
+</mapper>

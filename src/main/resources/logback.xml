@@ -1,0 +1,87 @@
+<!--
+  ~ Copyright (C) 2017 Baidu, Inc. All Rights Reserved.
+  -->
+<configuration>
+
+    <property name="LOG_HOME" value="./logs"/>
+
+    <!-- 控制台输出 -->
+    <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>%highlight([%level])\t%red([%d{yyyy-MM-dd HH:mm:ss.SSS}])\t%cyan(%msg%n)</pattern>
+        </encoder>
+    </appender>
+
+    <!-- server调试日志 -->
+    <appender name="SYS_DEBUG" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${LOG_HOME}/debug.sifcap.log</file>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <FileNamePattern>${LOG_HOME}/debug.sifcap.log.%d{yyyy-MM-dd}</FileNamePattern>
+            <MaxHistory>60</MaxHistory>
+        </rollingPolicy>
+        <encoder>
+            <pattern>[%level]\t[%d{yyyy-MM-dd HH:mm:ss.SSS}]\t%msg%n</pattern>
+            <charset>utf-8</charset>
+        </encoder>
+    </appender>
+
+    <!-- server日志 -->
+    <appender name="SYS_INFO" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${LOG_HOME}/info.sifcap.log</file>
+        <filter class="ch.qos.logback.classic.filter.LevelFilter">
+            <level>INFO</level>
+            <onMatch>ACCEPT</onMatch>
+            <onMismatch>DENY</onMismatch>
+        </filter>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <FileNamePattern>${LOG_HOME}/info.sifcap.log.%d{yyyy-MM-dd}</FileNamePattern>
+            <MaxHistory>60</MaxHistory>
+        </rollingPolicy>
+        <encoder>
+            <pattern>[%level]\t[%d{yyyy-MM-dd HH:mm:ss.SSS}]\t%msg%n</pattern>
+            <charset>utf-8</charset>
+        </encoder>
+    </appender>
+
+    <!-- server错误日志 -->
+    <appender name="SYS_ERROR" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${LOG_HOME}/error.sifcap.log</file>
+        <filter class="ch.qos.logback.classic.filter.LevelFilter">
+            <level>ERROR</level>
+            <onMatch>ACCEPT</onMatch>
+            <onMismatch>DENY</onMismatch>
+        </filter>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <FileNamePattern>${LOG_HOME}/error.sifcap.log.%d{yyyy-MM-dd}</FileNamePattern>
+            <MaxHistory>60</MaxHistory>
+        </rollingPolicy>
+        <encoder>
+            <pattern>[%level]\t[%d{yyyy-MM-dd HH:mm:ss.SSS}]\t%msg%n</pattern>
+            <charset>utf-8</charset>
+        </encoder>
+    </appender>
+
+    <!-- 原始输入信息 -->
+    <appender name="Input" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${LOG_HOME}/input.sifcap.log</file>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <FileNamePattern>${LOG_HOME}/input.sifcap.log.%d{yyyy-MM-dd}</FileNamePattern>
+            <MaxHistory>60</MaxHistory>
+        </rollingPolicy>
+        <encoder>
+            <pattern>[INPUT]\t[%d{yyyy-MM-dd HH:mm:ss.SSS}]\t%msg%n</pattern>
+            <charset>utf-8</charset>
+        </encoder>
+    </appender>
+
+    <logger name="Input" additivity="false" level="INFO">
+        <appender-ref ref="Input"/>
+    </logger>
+
+    <root level="DEBUG">
+        <appender-ref ref="CONSOLE"/>
+        <appender-ref ref="SYS_DEBUG"/>
+        <appender-ref ref="SYS_INFO"/>
+        <appender-ref ref="SYS_ERROR"/>
+    </root>
+</configuration>

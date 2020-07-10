@@ -1,0 +1,6 @@
+.idea/
+*.iml
+logs/
+output/
+*.tar.gz
+src/main/resources/mybatis-config.xml
