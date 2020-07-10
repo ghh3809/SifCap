@@ -22,6 +22,18 @@ public class LivePlay {
      */
     private Integer liveDifficultyId;
     /**
+     * 是否是随机歌曲
+     */
+    private Boolean isRandom;
+    /**
+     * 是否是AC歌曲
+     */
+    private Integer acFlag;
+    /**
+     * 是否是滑键歌曲
+     */
+    private Integer swingFlag;
+    /**
      * perfect数
      */
     private Integer perfectCnt;

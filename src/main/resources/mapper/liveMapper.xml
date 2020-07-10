@@ -10,6 +10,15 @@
         <if test="liveDifficultyId != null">
             , live_difficulty_id = #{liveDifficultyId}
         </if>
+        <if test="isRandom != null">
+            , is_random = #{isRandom}
+        </if>
+        <if test="acFlag != null">
+            , ac_flag = #{acFlag}
+        </if>
+        <if test="swingFlag != null">
+            , swing_flag = #{swingFlag}
+        </if>
         <if test="perfectCnt != null">
             , perfect_cnt = #{perfectCnt}
         </if>

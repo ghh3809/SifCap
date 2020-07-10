@@ -6,10 +6,10 @@ Sif国服个人数据收集服务
 
 ## 环境配置 (for Linux)
 
-1. 安装libpcap、libpcap-devel库
+1. 安装libpcap、libpcap-devel、sqlite3库
 
 ``` bash
-yum install -y libpcap libpcap-devel
+yum install -y libpcap libpcap-devel sqlite-devel
 ```
 
 2. 下载jnetpcap

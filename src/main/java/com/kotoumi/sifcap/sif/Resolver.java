@@ -237,6 +237,18 @@ public class Resolver {
         // 更新其他信息
         livePlay.setUserId(userId);
         try {
+            if (responseJson.containsKey("live_info")) {
+                JSONArray liveInfo = responseJson.getJSONArray("live_info");
+                if (!liveInfo.isEmpty()) {
+                    if (liveInfo.size() > 1) {
+                        log.info("Ignore multi live info: {}", liveInfo.size());
+                    }
+                    JSONObject live = liveInfo.getJSONObject(0);
+                    livePlay.setIsRandom(live.getBoolean("is_random"));
+                    livePlay.setAcFlag(live.getInteger("ac_flag"));
+                    livePlay.setSwingFlag(live.getInteger("swing_flag"));
+                }
+            }
             if (responseJson.containsKey("base_reward_info")) {
                 JSONObject baseRewardInfo = responseJson.getJSONObject("base_reward_info");
                 livePlay.setExpCnt(baseRewardInfo.getInteger("player_exp"));
