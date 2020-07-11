@@ -97,6 +97,21 @@
         <if test="birthDay != null">
             , birth_day = #{birthDay}
         </if>
+        <if test="settingAwardId != null">
+            , setting_award_id = #{settingAwardId}
+        </if>
+        <if test="settingBackgroundId != null">
+            , setting_background_id = #{settingBackgroundId}
+        </if>
+        <if test="introduction != null">
+            , introduction = #{introduction}
+        </if>
+        <if test="centerUnitInfoJson != null">
+            , center_unit_info_json = #{centerUnitInfoJson}
+        </if>
+        <if test="naviUnitInfoJson != null">
+            , navi_unit_info_json = #{naviUnitInfoJson}
+        </if>
     </insert>
 
     <select id="findUser" parameterType="int" resultType="com.kotoumi.sifcap.model.po.User">
@@ -194,6 +209,21 @@
         </if>
         <if test="birthDay != null">
             , birth_day = #{birthDay}
+        </if>
+        <if test="settingAwardId != null">
+            , setting_award_id = #{settingAwardId}
+        </if>
+        <if test="settingBackgroundId != null">
+            , setting_background_id = #{settingBackgroundId}
+        </if>
+        <if test="introduction != null">
+            , introduction = #{introduction}
+        </if>
+        <if test="centerUnitInfoJson != null">
+            , center_unit_info_json = #{centerUnitInfoJson}
+        </if>
+        <if test="naviUnitInfoJson != null">
+            , navi_unit_info_json = #{naviUnitInfoJson}
         </if>
         where user_id = #{userId}
     </update>

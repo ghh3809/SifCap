@@ -92,7 +92,7 @@ public class LivePlay {
     /**
      * 使用队伍
      */
-    private String unitList;
+    private String unitListJson;
     /**
      * 打歌时间
      */

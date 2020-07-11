@@ -133,6 +133,26 @@ public class User {
      */
     private Integer birthDay;
     /**
+     * 称号ID
+     */
+    private Integer settingAwardId;
+    /**
+     * 背景ID
+     */
+    private Integer settingBackgroundId;
+    /**
+     * 个人简介
+     */
+    private String introduction;
+    /**
+     * 头像信息
+     */
+    private String centerUnitInfoJson;
+    /**
+     * 看板信息
+     */
+    private String naviUnitInfoJson;
+    /**
      * 创建时间
      */
     private String createTime;

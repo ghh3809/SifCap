@@ -36,4 +36,16 @@ public class MapperTest {
         }
     }
 
+    @Test
+    public void testProfileInfo() {
+        int userId = 6669728;
+        List<String> requestLines = FileHelper.readLines("src/test/java/data/profileInfo.request");
+        List<String> responseLines = FileHelper.readLines("src/test/java/data/profileInfo.response");
+        TestCase.assertNotNull(requestLines);
+        TestCase.assertNotNull(responseLines);
+        for (int i = 0; i < Math.min(requestLines.size(), responseLines.size()); i ++) {
+            Resolver.updateProfileInfo(userId, JSON.parseObject(responseLines.get(i)));
+        }
+    }
+
 }

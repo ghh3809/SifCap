@@ -61,8 +61,8 @@
         <if test="socialPointCnt != null">
             , social_point_cnt = #{socialPointCnt}
         </if>
-        <if test="unitList != null">
-            , unit_list = #{unitList}
+        <if test="unitListJson != null">
+            , unit_list_json = #{unitListJson}
         </if>
         <if test="playTime != null">
             , play_time = #{playTime}

@@ -133,13 +133,32 @@ public class Resolver {
                     log.error("Response not contains key result");
                     continue;
                 }
-                response = response.getJSONObject("result");
                 requestUrl = request.getString("module") + "/" + request.getString("action");
-                processSingle(userId, requestUrl, request, response);
+                // result层有可能返回的是一个list
+                Object resultObject = response.get("result");
+                if (resultObject instanceof JSONObject) {
+                    processSingle(userId, requestUrl, request, (JSONObject) resultObject);
+                } else {
+                    log.debug("Ignore non-object result");
+                }
             }
         } else {
-            processSingle(userId, requestUrl, requestJson.getJSONObject("request_data"),
-                    responseJson.getJSONObject("response_data"));
+            if (!requestJson.containsKey(KEY_REQUEST_DATA)) {
+                log.error("Request json not contains request_data");
+                return;
+            }
+            if (!responseJson.containsKey(KEY_RESPONSE_DATA)) {
+                log.error("Response json not contains response_data");
+                return;
+            }
+            Object jsonObjectRequest = requestJson.get(KEY_REQUEST_DATA);
+            Object jsonObjectResponse = responseJson.get(KEY_RESPONSE_DATA);
+            // 有可能请求和返回的是list，这种情况不进行处理
+            if ((jsonObjectRequest instanceof JSONObject) && (jsonObjectResponse instanceof JSONObject)) {
+                processSingle(userId, requestUrl, (JSONObject) jsonObjectRequest, (JSONObject) jsonObjectResponse);
+            } else {
+                log.debug("Ignore non-object request or result");
+            }
         }
 
     }
@@ -157,8 +176,12 @@ public class Resolver {
         log.info("requestJson: {}", requestJson);
         log.info("responseJson: {}", responseJson);
         switch (requestUrl) {
+            // 用户基础信息
             case "user/userInfo":
                 updateUserInfo(userId, responseJson);
+                break;
+            case "profile/profileInfo":
+                updateProfileInfo(userId, responseJson);
                 break;
             // SM活动
             case "battle/liveEnd":
@@ -224,6 +247,32 @@ public class Resolver {
     }
 
     /**
+     * 更新用户详细信息
+     * @param userId 用户ID
+     * @param responseJson 响应JSON
+     */
+    public static void updateProfileInfo(int userId, JSONObject responseJson) {
+
+        // 初始化
+        if (!responseJson.containsKey("user_info")) {
+            log.error("updateUserInfo not found key: user_info");
+            return;
+        }
+        User user = responseJson.getJSONObject("user_info").toJavaObject(User.class);
+        user.setSettingAwardId(responseJson.getInteger("setting_award_id"));
+        user.setSettingBackgroundId(responseJson.getInteger("setting_background_id"));
+        user.setCenterUnitInfoJson(responseJson.getJSONObject("center_unit_info").toJSONString());
+        user.setNaviUnitInfoJson(responseJson.getJSONObject("navi_unit_info").toJSONString());
+
+        // 入库
+        if (Dao.findUser(userId) == null) {
+            Dao.insertUser(user);
+        } else {
+            Dao.updateUser(user);
+        }
+    }
+
+    /**
      * 记录演唱会信息
      * @param userId 用户ID
      * @param requestJson 请求JSON
@@ -256,7 +305,7 @@ public class Resolver {
                 livePlay.setSocialPointCnt(baseRewardInfo.getInteger("social_point"));
             }
             if (responseJson.containsKey("unit_list")) {
-                livePlay.setUnitList(responseJson.getJSONArray("unit_list").toJSONString());
+                livePlay.setUnitListJson(responseJson.getJSONArray("unit_list").toJSONString());
             }
             if (responseJson.containsKey("server_timestamp")) {
                 livePlay.setPlayTime(SIMPLE_DATE_FORMAT.format(new Date(responseJson.getLong("server_timestamp") * 1000)));
