@@ -67,3 +67,12 @@ CREATE TABLE `live_play` (
   PRIMARY KEY (`id`),
   KEY `user_id` (`user_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='演唱会记录';
+
+CREATE TABLE `event_map` (
+    `event_id` int(11) NOT NULL COMMENT '活动ID',
+    `event_name` varchar(128) NOT NULL COMMENT '活动名称',
+    PRIMARY KEY (`event_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='活动名称对应表';
+
+INSERT INTO `event_map` VALUES(0, '非活动');
+
