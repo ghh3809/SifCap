@@ -11,7 +11,7 @@ public class LivePlay {
     /**
      * 自增ID
      */
-    private long id;
+    private Long id;
 
     /**
      * uid

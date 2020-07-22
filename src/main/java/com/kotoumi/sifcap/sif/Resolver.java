@@ -4,6 +4,8 @@ import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.kotoumi.sifcap.model.dao.Dao;
+import com.kotoumi.sifcap.model.po.SecretBox;
+import com.kotoumi.sifcap.model.po.Unit;
 import com.kotoumi.sifcap.utils.LoggerHelper;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.ArrayUtils;
@@ -15,7 +17,11 @@ import com.kotoumi.sifcap.model.po.User;
 import com.kotoumi.sifcap.utils.CompressHelper;
 
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -35,6 +41,7 @@ public class Resolver {
     private static final String KEY_RESPONSE_DATA = "response_data";
     private static final Pattern NAME_PATTERN = Pattern.compile("^Content-Disposition: form-data;.*name=\"([^)]*)\".*$");
     private static final SimpleDateFormat SIMPLE_DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+    private static final Map<Integer, JSONObject> CACHED_LIVE = new HashMap<>();
 
     /**
      * 对请求-回应对进行解析
@@ -154,10 +161,15 @@ public class Resolver {
             Object jsonObjectRequest = requestJson.get(KEY_REQUEST_DATA);
             Object jsonObjectResponse = responseJson.get(KEY_RESPONSE_DATA);
             // 有可能请求和返回的是list，这种情况不进行处理
-            if ((jsonObjectRequest instanceof JSONObject) && (jsonObjectResponse instanceof JSONObject)) {
+            if (!(jsonObjectRequest instanceof JSONObject)) {
+                log.debug("Ignore non-object request!");
+                return;
+            }
+            if (jsonObjectResponse instanceof JSONObject) {
                 processSingle(userId, requestUrl, (JSONObject) jsonObjectRequest, (JSONObject) jsonObjectResponse);
             } else {
                 log.debug("Ignore non-object request or result");
+                processSingle(userId, requestUrl, (JSONObject) jsonObjectRequest, new JSONObject());
             }
         }
 
@@ -183,8 +195,27 @@ public class Resolver {
             case "profile/profileInfo":
                 updateProfileInfo(userId, responseJson);
                 break;
+            // 卡组信息
+            case "unit/unitAll":
+                updateUnitInfo(userId, responseJson);
+                break;
+            // 队伍信息
+            case "unit/deck":
+                updateDeckInfo(userId, responseJson);
+                break;
+            // 宝石信息
+            case "unit/removableSkillInfo":
+                updateRemovableSkillInfo(userId, responseJson);
+                break;
             // SM活动
             case "battle/liveEnd":
+                CACHED_LIVE.put(userId, requestJson);
+                break;
+            case "battle/endRoom":
+                if (CACHED_LIVE.containsKey(userId)) {
+                    recordLiveInfo(userId, CACHED_LIVE.remove(userId), responseJson);
+                }
+                break;
             // CF活动
             case "challenge/checkpoint":
             // 协力活动
@@ -196,6 +227,11 @@ public class Resolver {
             // 普通演唱会
             case "live/reward":
                 recordLiveInfo(userId, requestJson, responseJson);
+                break;
+            // 招募
+            case "secretbox/pon":
+            case "secretbox/multi":
+                recordSecretBoxInfo(userId, responseJson);
                 break;
             default:
                 log.info("Ignore url: {}", requestUrl);
@@ -273,6 +309,46 @@ public class Resolver {
     }
 
     /**
+     * 更新用户卡组信息
+     * @param userId 用户ID
+     * @param responseJson 响应JSON
+     */
+    public static void updateUnitInfo(int userId, JSONObject responseJson) {
+
+        // 初始化
+        List<Unit> unitList = new ArrayList<>();
+        updatePartUnitInfo(userId, responseJson, unitList, "active");
+        updatePartUnitInfo(userId, responseJson, unitList, "waiting");
+
+        // 入库
+        Dao.batchDeleteUnit(userId);
+        Dao.batchAddUnit(unitList);
+
+    }
+
+    /**
+     * 更新用户队伍信息
+     * @param userId 用户ID
+     * @param responseJson 响应JSON
+     */
+    public static void updateDeckInfo(int userId, JSONObject responseJson) {
+
+
+
+    }
+
+    /**
+     * 更新用户宝石信息
+     * @param userId 用户ID
+     * @param responseJson 响应JSON
+     */
+    public static void updateRemovableSkillInfo(int userId, JSONObject responseJson) {
+
+
+
+    }
+
+    /**
      * 记录演唱会信息
      * @param userId 用户ID
      * @param requestJson 请求JSON
@@ -293,6 +369,7 @@ public class Resolver {
                         log.info("Ignore multi live info: {}", liveInfo.size());
                     }
                     JSONObject live = liveInfo.getJSONObject(0);
+                    livePlay.setLiveDifficultyId(live.getInteger("live_difficulty_id"));
                     livePlay.setIsRandom(live.getBoolean("is_random"));
                     livePlay.setAcFlag(live.getInteger("ac_flag"));
                     livePlay.setSwingFlag(live.getInteger("swing_flag"));
@@ -316,6 +393,55 @@ public class Resolver {
 
         // 入库
         Dao.insertLivePlay(livePlay);
+
+        // 尝试更新用户信息
+        if (responseJson.containsKey("after_user_info")) {
+            User user = responseJson.getJSONObject("after_user_info").toJavaObject(User.class);
+            user.setUserId(userId);
+            Dao.updateUser(user);
+        }
+
+    }
+
+    /**
+     * 记录招募信息
+     * @param userId 用户ID
+     * @param responseJson 响应JSON
+     */
+    public static void recordSecretBoxInfo(int userId, JSONObject responseJson) {
+
+        // 检查必须项
+        if (!responseJson.containsKey("secret_box_info") || !responseJson.containsKey("secret_box_items")
+                || !responseJson.containsKey("server_timestamp")) {
+            log.error("Invalid secret box response");
+        }
+
+        List<SecretBox> secretBoxList = new ArrayList<>();
+
+        JSONObject secretBoxInfo = responseJson.getJSONObject("secret_box_info");
+        Integer secretBoxId = secretBoxInfo.getInteger("secret_box_id");
+        String name = secretBoxInfo.getString("name");
+        String ponTime = SIMPLE_DATE_FORMAT.format(new Date(responseJson.getLong("server_timestamp") * 1000));
+
+        JSONObject secretBoxItems = responseJson.getJSONObject("secret_box_items");
+        if (secretBoxItems.containsKey("unit")) {
+            JSONArray unitList = secretBoxItems.getJSONArray("unit");
+            for (int i = 0; i < unitList.size(); i ++) {
+                JSONObject unit = unitList.getJSONObject(i);
+                SecretBox secretBox = new SecretBox();
+                secretBox.setUserId(userId);
+                secretBox.setSecretBoxId(secretBoxId);
+                secretBox.setName(name);
+                secretBox.setUnitId(unit.getInteger("unit_id"));
+                secretBox.setRank(unit.getInteger("rank"));
+                secretBox.setRarity(unit.getInteger("unit_rarity_id"));
+                secretBox.setPonTime(ponTime);
+                secretBoxList.add(secretBox);
+            }
+        }
+
+        // 入库
+        Dao.batchInsertSecretBox(secretBoxList);
 
         // 尝试更新用户信息
         if (responseJson.containsKey("after_user_info")) {
@@ -384,6 +510,25 @@ public class Resolver {
         } else {
             log.info("Could not resolve content type: {}", httpData.getContentType());
             return new JSONObject();
+        }
+    }
+
+    /**
+     * 更新部分用户信息
+     * @param userId 用户ID
+     * @param responseJson 返回信息
+     * @param unitList 待加入的成员列表
+     * @param key 需加入的key
+     */
+    private static void updatePartUnitInfo(int userId, JSONObject responseJson, List<Unit> unitList, String key) {
+        if (responseJson.containsKey(key)) {
+            JSONArray unitListJson = responseJson.getJSONArray(key);
+            for (int i = 0; i < unitListJson.size(); i ++) {
+                Unit unit = unitListJson.getJSONObject(i).toJavaObject(Unit.class);
+                unit.setUserId(userId);
+                unit.setStatus(key);
+                unitList.add(unit);
+            }
         }
     }
 

@@ -95,7 +95,7 @@ public class User {
     /**
      * 用户ID
      */
-    private Integer inviteCode;
+    private String inviteCode;
     /**
      * 未知字段
      */

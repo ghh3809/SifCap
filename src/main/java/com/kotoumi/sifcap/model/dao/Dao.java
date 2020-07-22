@@ -1,5 +1,7 @@
 package com.kotoumi.sifcap.model.dao;
 
+import com.kotoumi.sifcap.model.po.SecretBox;
+import com.kotoumi.sifcap.model.po.Unit;
 import org.apache.ibatis.io.Resources;
 import org.apache.ibatis.session.SqlSession;
 import org.apache.ibatis.session.SqlSessionFactory;
@@ -9,6 +11,7 @@ import com.kotoumi.sifcap.model.po.User;
 
 import java.io.IOException;
 import java.io.Reader;
+import java.util.List;
 
 /**
  * @author guohaohao
@@ -18,7 +21,15 @@ public class Dao {
     private static final SqlSessionFactory SQL_MAPPER;
 
     static {
-        String resources = "mybatis-config.xml";
+        // 这里打开调试开关
+        boolean isDev = false;
+        String resources;
+        if (isDev) {
+            resources = "mybatis-config-dev.xml";
+        } else {
+            resources = "mybatis-config.xml";
+        }
+
         Reader reader = null;
         try {
             reader = Resources.getResourceAsReader(resources);
@@ -56,7 +67,7 @@ public class Dao {
      */
     public static void updateUser(User user) {
         try (SqlSession session = SQL_MAPPER.openSession()) {
-            session.insert("updateUser", user);
+            session.update("updateUser", user);
             session.commit();
         }
     }
@@ -68,6 +79,38 @@ public class Dao {
     public static void insertLivePlay(LivePlay livePlay) {
         try (SqlSession session = SQL_MAPPER.openSession()) {
             session.insert("insertLivePlay", livePlay);
+            session.commit();
+        }
+    }
+
+    /**
+     * 批量插入卡组信息
+     * @param list 卡组列表
+     */
+    public static void batchAddUnit(List<Unit> list) {
+        try (SqlSession session = SQL_MAPPER.openSession()) {
+            session.insert("batchAddUnit", list);
+            session.commit();
+        }
+    }
+
+    /**
+     * 批量删除卡组信息
+     */
+    public static void batchDeleteUnit(int userId) {
+        try (SqlSession session = SQL_MAPPER.openSession()) {
+            session.delete("batchDeleteUnit", userId);
+            session.commit();
+        }
+    }
+
+    /**
+     * 插入招募记录
+     * @param list 招募记录
+     */
+    public static void batchInsertSecretBox(List<SecretBox> list) {
+        try (SqlSession session = SQL_MAPPER.openSession()) {
+            session.insert("batchInsertSecretBox", list);
             session.commit();
         }
     }

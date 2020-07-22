@@ -48,4 +48,28 @@ public class MapperTest {
         }
     }
 
+    @Test
+    public void testUnitAll() {
+        int userId = 6669728;
+        List<String> requestLines = FileHelper.readLines("src/test/java/data/unitAll.request");
+        List<String> responseLines = FileHelper.readLines("src/test/java/data/unitAll.response");
+        TestCase.assertNotNull(requestLines);
+        TestCase.assertNotNull(responseLines);
+        for (int i = 0; i < Math.min(requestLines.size(), responseLines.size()); i ++) {
+            Resolver.updateUnitInfo(userId, JSON.parseObject(responseLines.get(i)));
+        }
+    }
+
+    @Test
+    public void testSecretBoxPon() {
+        int userId = 6669728;
+        List<String> requestLines = FileHelper.readLines("src/test/java/data/secretBoxPon.request");
+        List<String> responseLines = FileHelper.readLines("src/test/java/data/secretBoxPon.response");
+        TestCase.assertNotNull(requestLines);
+        TestCase.assertNotNull(responseLines);
+        for (int i = 0; i < Math.min(requestLines.size(), responseLines.size()); i ++) {
+            Resolver.recordSecretBoxInfo(userId, JSON.parseObject(responseLines.get(i)));
+        }
+    }
+
 }

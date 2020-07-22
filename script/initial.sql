@@ -76,3 +76,53 @@ CREATE TABLE `event_map` (
 
 INSERT INTO `event_map` VALUES(0, '非活动');
 
+CREATE TABLE `event_live_m` (
+    `live_difficulty_id` int(11) NOT NULL COMMENT '歌曲难度ID',
+    `live_setting_id` int(11) NOT NULL COMMENT '歌曲设置ID',
+    PRIMARY KEY (`live_difficulty_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='活动歌曲信息';
+
+CREATE TABLE `unit` (
+    `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT '自增id',
+    `user_id` int(11) NOT NULL COMMENT '用户id',
+    `status` varchar(10) NOT NULL COMMENT '卡所在状态，active/waiting',
+    `love` int(11) DEFAULT NULL COMMENT '当前绊点',
+    `max_love` int(11) DEFAULT NULL COMMENT '最大绊点',
+    `is_skill_level_max` tinyint DEFAULT NULL COMMENT '技能等级是否最大',
+    `level` int(11) DEFAULT NULL COMMENT '成员等级',
+    `insert_date` datetime DEFAULT NULL COMMENT '获取时间',
+    `unit_skill_level` int(11) DEFAULT NULL COMMENT '技能等级',
+    `unit_skill_exp` int(11) DEFAULT NULL COMMENT '技能经验',
+    `max_hp` int(11) DEFAULT NULL COMMENT '最大hp',
+    `display_rank` int(11) DEFAULT NULL COMMENT '显示rank',
+    `unit_removable_skill_capacity` int(11) DEFAULT NULL COMMENT '宝石容量',
+    `unit_owning_user_id` bigint DEFAULT NULL COMMENT '获取id',
+    `is_level_max` tinyint DEFAULT NULL COMMENT '等级是否最大',
+    `max_rank` int(11) DEFAULT NULL COMMENT '最大rank',
+    `max_level` int(11) DEFAULT NULL COMMENT '最大等级',
+    `is_love_max` tinyint DEFAULT NULL COMMENT '是否满绊',
+    `is_removable_skill_capacity_max` tinyint DEFAULT NULL COMMENT '是否最大宝石容量',
+    `rank` int(11) DEFAULT NULL COMMENT '当前rank',
+    `next_exp` int(11) DEFAULT NULL COMMENT '下一级exp',
+    `exp` int(11) DEFAULT NULL COMMENT '当前exp',
+    `unit_id` int(11) DEFAULT NULL COMMENT '成员ID',
+    `favorite_flag` tinyint DEFAULT NULL COMMENT '是否锁定',
+    `is_rank_max` tinyint DEFAULT NULL COMMENT '是否最大rank',
+    `create_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    `update_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    PRIMARY KEY (`id`),
+    KEY `user_id` (`user_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='成员信息';
+
+CREATE TABLE `secret_box` (
+    `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT '自增id',
+    `user_id` int(11) NOT NULL COMMENT '用户id',
+    `secret_box_id` int(11) NOT NULL COMMENT '招募ID',
+    `name` varchar(256) DEFAULT NULL COMMENT '招募名称',
+    `unit_id` int(11) DEFAULT NULL COMMENT '成员ID',
+    `rank` int(11) DEFAULT NULL COMMENT '当前rank',
+    `rarity` int(11) DEFAULT NULL COMMENT '成员稀有度',
+    `pon_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    PRIMARY KEY (`id`),
+    KEY `user_id` (`user_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='招募信息';

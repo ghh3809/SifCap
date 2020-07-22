@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="mapper">
+
+    <insert id="batchAddUnit">
+        insert into unit (
+            user_id, status, love, max_love, is_skill_level_max,
+            level, insert_date, unit_skill_level, unit_skill_exp, max_hp,
+            display_rank, unit_removable_skill_capacity, unit_owning_user_id, is_level_max, max_rank,
+            max_level, is_love_max, is_removable_skill_capacity_max, `rank`, next_exp,
+            exp, unit_id, favorite_flag, is_rank_max
+        ) values
+        <foreach collection="list" item="unit" separator=",">
+            (#{unit.userId}, #{unit.status}, #{unit.love}, #{unit.maxLove}, #{unit.isSkillLevelMax},
+             #{unit.level}, #{unit.insertDate}, #{unit.unitSkillLevel}, #{unit.unitSkillExp}, #{unit.maxHp},
+             #{unit.displayRank}, #{unit.unitRemovableSkillCapacity}, #{unit.unitOwningUserId}, #{unit.isLevelMax}, #{unit.maxRank},
+             #{unit.maxLevel}, #{unit.isLoveMax}, #{unit.isRemovableSkillCapacityMax}, #{unit.rank}, #{unit.nextExp},
+             #{unit.exp}, #{unit.unitId}, #{unit.favoriteFlag}, #{unit.isRankMax})
+        </foreach>
+    </insert>
+
+    <delete id="batchDeleteUnit">
+        delete from unit where user_id = #{userId}
+    </delete>
+
+</mapper>
