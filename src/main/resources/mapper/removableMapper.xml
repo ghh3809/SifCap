@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="mapper">
+
+    <insert id="batchAddRemovableSkillEquipment">
+        insert into removable_skill_equipment (
+            user_id, unit_owning_user_id, unit_removable_skill_id_list
+        ) values
+        <foreach collection="list" item="removable" separator=",">
+            (#{removable.userId}, #{removable.unitOwningUserId}, #{removable.unitRemovableSkillIdList})
+        </foreach>
+    </insert>
+
+    <delete id="batchDeleteRemovableSkillEquipment">
+        delete from removable_skill_equipment where user_id = #{userId}
+    </delete>
+
+</mapper>

@@ -1,5 +1,7 @@
 package com.kotoumi.sifcap.model.dao;
 
+import com.kotoumi.sifcap.model.po.Deck;
+import com.kotoumi.sifcap.model.po.RemovableSkillEquipment;
 import com.kotoumi.sifcap.model.po.SecretBox;
 import com.kotoumi.sifcap.model.po.Unit;
 import org.apache.ibatis.io.Resources;
@@ -111,6 +113,48 @@ public class Dao {
     public static void batchInsertSecretBox(List<SecretBox> list) {
         try (SqlSession session = SQL_MAPPER.openSession()) {
             session.insert("batchInsertSecretBox", list);
+            session.commit();
+        }
+    }
+
+    /**
+     * 批量插入队伍信息
+     * @param list 队伍列表
+     */
+    public static void batchAddDeck(List<Deck> list) {
+        try (SqlSession session = SQL_MAPPER.openSession()) {
+            session.insert("batchAddDeck", list);
+            session.commit();
+        }
+    }
+
+    /**
+     * 批量删除队伍信息
+     */
+    public static void batchDeleteDeck(int userId) {
+        try (SqlSession session = SQL_MAPPER.openSession()) {
+            session.delete("batchDeleteDeck", userId);
+            session.commit();
+        }
+    }
+
+    /**
+     * 批量插入队伍信息
+     * @param list 队伍列表
+     */
+    public static void batchAddRemovableSkillEquipment(List<RemovableSkillEquipment> list) {
+        try (SqlSession session = SQL_MAPPER.openSession()) {
+            session.insert("batchAddRemovableSkillEquipment", list);
+            session.commit();
+        }
+    }
+
+    /**
+     * 批量删除队伍信息
+     */
+    public static void batchDeleteRemovableSkillEquipment(int userId) {
+        try (SqlSession session = SQL_MAPPER.openSession()) {
+            session.delete("batchDeleteRemovableSkillEquipment", userId);
             session.commit();
         }
     }

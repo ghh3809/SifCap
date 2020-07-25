@@ -4,6 +4,8 @@ import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.kotoumi.sifcap.model.dao.Dao;
+import com.kotoumi.sifcap.model.po.Deck;
+import com.kotoumi.sifcap.model.po.RemovableSkillEquipment;
 import com.kotoumi.sifcap.model.po.SecretBox;
 import com.kotoumi.sifcap.model.po.Unit;
 import com.kotoumi.sifcap.utils.LoggerHelper;
@@ -55,34 +57,41 @@ public class Resolver {
         JSONObject responseJson;
 
         try {
+
             // 数据提取和校验
             HttpData request = requestResponsePair.getRequest();
             HttpData response = requestResponsePair.getResponse();
+
             if (request == null) {
                 log.error("HTTP request is null");
                 return;
             }
+            requestUrl = request.getRequestUrl();
+            LoggerHelper.logInput("RequestUrl: " + requestUrl);
+
+            requestJson = toJson(request);
+            LoggerHelper.logInput("Request: " + requestJson.toJSONString());
+
             if (response == null) {
                 log.error("HTTP response is null");
                 return;
             }
+            responseJson = toJson(response);
+            LoggerHelper.logInput("Response: " + responseJson.toJSONString());
+
+            if (StringUtils.isBlank(requestUrl)) {
+                log.error("requestUrl is invalid: {}", requestUrl);
+                return;
+            }
+
             String userIdString = request.getHeaders().get("User-ID");
             if (StringUtils.isBlank(userIdString)) {
                 log.error("userId is invalid: {}", userIdString);
                 return;
             }
             userId = Integer.parseInt(userIdString);
-            requestUrl = request.getRequestUrl();
-            requestJson = toJson(request);
-            responseJson = toJson(response);
-            if (StringUtils.isBlank(requestUrl)) {
-                log.error("requestUrl is invalid: {}", requestUrl);
-                return;
-            }
             LoggerHelper.logInput("UserId: " + userId);
-            LoggerHelper.logInput("RequestUrl: " + requestUrl);
-            LoggerHelper.logInput("Request: " + requestJson.toJSONString());
-            LoggerHelper.logInput("Response: " + responseJson.toJSONString());
+
         } catch (Exception e) {
             log.error("Resolve requestResponsePair failed");
             return;
@@ -201,7 +210,7 @@ public class Resolver {
                 break;
             // 队伍信息
             case "unit/deck":
-                updateDeckInfo(userId, responseJson);
+                updateDeckInfo(userId, requestJson);
                 break;
             // 宝石信息
             case "unit/removableSkillInfo":
@@ -291,7 +300,7 @@ public class Resolver {
 
         // 初始化
         if (!responseJson.containsKey("user_info")) {
-            log.error("updateUserInfo not found key: user_info");
+            log.error("updateProfileInfo not found key: user_info");
             return;
         }
         User user = responseJson.getJSONObject("user_info").toJavaObject(User.class);
@@ -329,11 +338,30 @@ public class Resolver {
     /**
      * 更新用户队伍信息
      * @param userId 用户ID
-     * @param responseJson 响应JSON
+     * @param requestJson 请求JSON
      */
-    public static void updateDeckInfo(int userId, JSONObject responseJson) {
+    public static void updateDeckInfo(int userId, JSONObject requestJson) {
 
+        // 初始化
+        if (!requestJson.containsKey("unit_deck_list")) {
+            log.error("updateDeckInfo not found key: unit_deck_list");
+            return;
+        }
 
+        // 更新队伍信息
+        List<Deck> deckList = new ArrayList<>(9);
+        JSONArray unitDeckList = requestJson.getJSONArray("unit_deck_list");
+        for (int i = 0; i < unitDeckList.size(); i ++) {
+            JSONObject unitDeck = unitDeckList.getJSONObject(i);
+            Deck deck = unitDeck.toJavaObject(Deck.class);
+            deck.setUserId(userId);
+            deck.setUnitDeckDetailJson(unitDeck.getJSONArray("unit_deck_detail").toJSONString());
+            deckList.add(deck);
+        }
+
+        // 入库
+        Dao.batchDeleteDeck(userId);
+        Dao.batchAddDeck(deckList);
 
     }
 
@@ -344,7 +372,32 @@ public class Resolver {
      */
     public static void updateRemovableSkillInfo(int userId, JSONObject responseJson) {
 
+        List<RemovableSkillEquipment> removableSkillEquipmentList = new ArrayList<>();
 
+        // 更新宝石使用信息
+        if (responseJson.containsKey("equipment_info")) {
+            JSONObject equipmentInfo = responseJson.getJSONObject("equipment_info");
+            for (Object value : equipmentInfo.values()) {
+                if (value instanceof JSONObject) {
+                    Long unitOwningUserId = ((JSONObject) value).getLong("unit_owning_user_id");
+                    JSONArray details = ((JSONObject) value).getJSONArray("detail");
+                    List<Integer> unitRemovableSkillIdList = new ArrayList<>(details.size());
+                    for (int i = 0; i < details.size(); i ++) {
+                        JSONObject detail = details.getJSONObject(i);
+                        unitRemovableSkillIdList.add(detail.getInteger("unit_removable_skill_id"));
+                    }
+                    RemovableSkillEquipment removableSkillEquipment = new RemovableSkillEquipment();
+                    removableSkillEquipment.setUserId(userId);
+                    removableSkillEquipment.setUnitOwningUserId(unitOwningUserId);
+                    removableSkillEquipment.setUnitRemovableSkillIdList(JSON.toJSONString(unitRemovableSkillIdList));
+                    removableSkillEquipmentList.add(removableSkillEquipment);
+                }
+            }
+        }
+
+        // 入库
+        Dao.batchDeleteRemovableSkillEquipment(userId);
+        Dao.batchAddRemovableSkillEquipment(removableSkillEquipmentList);
 
     }
 

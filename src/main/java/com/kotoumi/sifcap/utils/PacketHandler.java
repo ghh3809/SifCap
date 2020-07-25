@@ -152,7 +152,7 @@ public class PacketHandler<T> implements PcapPacketHandler<T> {
                     // 过滤黑名单url
                     if (BLACK_URL_SET.contains(requestUrl)) {
                         IGNORE_PORT.put(source, System.currentTimeMillis());
-                        log.debug("Ignore black url: {}", host);
+                        log.debug("Ignore black url: {}", requestUrl);
                         return;
                     }
 

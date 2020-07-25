@@ -72,4 +72,28 @@ public class MapperTest {
         }
     }
 
+    @Test
+    public void testUnitDeck() {
+        int userId = 6669728;
+        List<String> requestLines = FileHelper.readLines("src/test/java/data/unitDeck.request");
+        List<String> responseLines = FileHelper.readLines("src/test/java/data/unitDeck.response");
+        TestCase.assertNotNull(requestLines);
+        TestCase.assertNotNull(responseLines);
+        for (int i = 0; i < Math.min(requestLines.size(), responseLines.size()); i ++) {
+            Resolver.updateDeckInfo(userId, JSON.parseObject(requestLines.get(i)));
+        }
+    }
+
+    @Test
+    public void testUnitRemovableSkillInfo() {
+        int userId = 6669728;
+        List<String> requestLines = FileHelper.readLines("src/test/java/data/unitRemovableSkillInfo.request");
+        List<String> responseLines = FileHelper.readLines("src/test/java/data/unitRemovableSkillInfo.response");
+        TestCase.assertNotNull(requestLines);
+        TestCase.assertNotNull(responseLines);
+        for (int i = 0; i < Math.min(requestLines.size(), responseLines.size()); i ++) {
+            Resolver.updateRemovableSkillInfo(userId, JSON.parseObject(responseLines.get(i)));
+        }
+    }
+
 }

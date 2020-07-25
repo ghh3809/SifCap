@@ -23,6 +23,8 @@
         <mapper resource="mapper/liveMapper.xml"/>
         <mapper resource="mapper/unitMapper.xml"/>
         <mapper resource="mapper/secretBoxMapper.xml"/>
+        <mapper resource="mapper/deckMapper.xml"/>
+        <mapper resource="mapper/removableMapper.xml"/>
     </mappers>
 
 </configuration>
