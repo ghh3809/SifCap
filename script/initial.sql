@@ -111,7 +111,7 @@ CREATE TABLE `unit` (
     `create_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
     `update_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     PRIMARY KEY (`id`),
-    KEY `user_id` (`user_id`)
+    UNIQUE `user_unit` (`user_id`, `unit_owning_user_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='成员信息';
 
 CREATE TABLE `secret_box` (
@@ -126,3 +126,27 @@ CREATE TABLE `secret_box` (
     PRIMARY KEY (`id`),
     KEY `user_id` (`user_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='招募信息';
+
+CREATE TABLE `deck` (
+    `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT '自增id',
+    `user_id` int(11) NOT NULL COMMENT '用户id',
+    `unit_deck_id` int(11) DEFAULT NULL COMMENT '队伍编号',
+    `main_flag` int(11) DEFAULT NULL COMMENT '是否为主力',
+    `deck_name` varchar(10) DEFAULT NULL COMMENT '队伍名称',
+    `unit_deck_detail_json` text COMMENT '成员json',
+    `create_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    `update_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    PRIMARY KEY (`id`),
+    KEY `user_id` (`user_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='队伍信息';
+
+CREATE TABLE `removable_skill_equipment` (
+    `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT '自增id',
+    `user_id` int(11) NOT NULL COMMENT '用户id',
+    `unit_owning_user_id` bigint(20) DEFAULT NULL COMMENT '获取ID',
+    `unit_removable_skill_id_list` text DEFAULT NULL COMMENT '宝石列表',
+    `create_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    `update_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    PRIMARY KEY (`id`),
+    KEY `user_id` (`user_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='宝石信息';
