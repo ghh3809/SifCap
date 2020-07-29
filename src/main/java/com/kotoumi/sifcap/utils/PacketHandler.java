@@ -211,7 +211,7 @@ public class PacketHandler<T> implements PcapPacketHandler<T> {
                         // 判断是否已经完成
                         if (requestResponsePair.getResponse().getCurrentLength() >=
                                 requestResponsePair.getResponse().getContentLength()) {
-                            log.info("HTTP request response pair resolve finish!");
+                            log.debug("HTTP request response pair resolve finish!");
                             Resolver.resolve(PAIR_MAP.remove(destination));
                         }
 

@@ -35,7 +35,7 @@
         </filter>
         <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
             <FileNamePattern>${LOG_HOME}/info.sifcap.log.%d{yyyy-MM-dd}</FileNamePattern>
-            <MaxHistory>60</MaxHistory>
+            <MaxHistory>365</MaxHistory>
         </rollingPolicy>
         <encoder>
             <pattern>[%level]\t[%d{yyyy-MM-dd HH:mm:ss.SSS}]\t%msg%n</pattern>
@@ -53,7 +53,7 @@
         </filter>
         <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
             <FileNamePattern>${LOG_HOME}/error.sifcap.log.%d{yyyy-MM-dd}</FileNamePattern>
-            <MaxHistory>60</MaxHistory>
+            <MaxHistory>365</MaxHistory>
         </rollingPolicy>
         <encoder>
             <pattern>[%level]\t[%d{yyyy-MM-dd HH:mm:ss.SSS}]\t%msg%n</pattern>
@@ -66,7 +66,7 @@
         <file>${LOG_HOME}/input.sifcap.log</file>
         <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
             <FileNamePattern>${LOG_HOME}/input.sifcap.log.%d{yyyy-MM-dd}</FileNamePattern>
-            <MaxHistory>60</MaxHistory>
+            <MaxHistory>3</MaxHistory>
         </rollingPolicy>
         <encoder>
             <pattern>[INPUT]\t[%d{yyyy-MM-dd HH:mm:ss.SSS}]\t%msg%n</pattern>
@@ -80,7 +80,7 @@
 
     <root level="DEBUG">
         <appender-ref ref="CONSOLE"/>
-        <appender-ref ref="SYS_DEBUG"/>
+<!--        <appender-ref ref="SYS_DEBUG"/>-->
         <appender-ref ref="SYS_INFO"/>
         <appender-ref ref="SYS_ERROR"/>
     </root>

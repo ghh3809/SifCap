@@ -233,8 +233,9 @@ public class Resolver {
             case "quest/questReward":
             // MF活动
             case "festival/liveReward":
-            // 普通演唱会
+            // 普通演唱会/随机演唱会
             case "live/reward":
+            case "rlive/reward":
                 recordLiveInfo(userId, requestJson, responseJson);
                 break;
             // 招募
