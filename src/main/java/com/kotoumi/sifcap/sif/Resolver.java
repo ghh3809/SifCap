@@ -414,6 +414,7 @@ public class Resolver {
         LivePlay livePlay = requestJson.toJavaObject(LivePlay.class);
 
         // 更新其他信息
+        JSONArray unitListJson = null;
         livePlay.setUserId(userId);
         try {
             if (responseJson.containsKey("live_info")) {
@@ -436,7 +437,8 @@ public class Resolver {
                 livePlay.setSocialPointCnt(baseRewardInfo.getInteger("social_point"));
             }
             if (responseJson.containsKey("unit_list")) {
-                livePlay.setUnitListJson(responseJson.getJSONArray("unit_list").toJSONString());
+                unitListJson = responseJson.getJSONArray("unit_list");
+                livePlay.setUnitListJson(unitListJson.toJSONString());
             }
             if (responseJson.containsKey("server_timestamp")) {
                 livePlay.setPlayTime(SIMPLE_DATE_FORMAT.format(new Date(responseJson.getLong("server_timestamp") * 1000)));
@@ -453,6 +455,29 @@ public class Resolver {
             User user = responseJson.getJSONObject("after_user_info").toJavaObject(User.class);
             user.setUserId(userId);
             Dao.updateUser(user);
+        }
+
+        // 尝试入库成员信息
+        if (unitListJson != null) {
+            // 获取所有成员的unitOwningUserId
+            List<Unit> unitList = new ArrayList<>(9);
+            for (int i = 0; i < unitListJson.size(); i++) {
+                JSONObject unitJson = unitListJson.getJSONObject(i);
+                Unit unit = unitJson.toJavaObject(Unit.class);
+                unit.setUserId(userId);
+                unit.setStatus("deck");
+                unit.setRank(unit.getIsRankMax() ? 2 : 1);
+                unit.setDisplayRank(unit.getRank());
+                unit.setUnitRemovableSkillCapacity(4);
+                unitList.add(unit);
+            }
+
+            // 检查该成员是否有unitAll接口得到的成员信息，如果没有，则数据更新入库
+            if (Dao.checkValidUnit(userId) == null) {
+                Dao.batchDeleteSelectUnit(userId, unitList);
+                Dao.batchAddUnit(unitList);
+            }
+
         }
 
     }

@@ -26,4 +26,15 @@
         delete from unit where user_id = #{userId}
     </delete>
 
+    <select id="checkValidUnit" resultType="com.kotoumi.sifcap.model.po.Unit">
+        select * from unit where user_id = #{userId} and (status = 'active' or status = 'waiting') limit 1
+    </select>
+
+    <delete id="batchDeleteSelectUnit">
+        delete from unit where user_id = #{userId} and unit_owning_user_id in
+        <foreach collection="unitList" item="unit" index="index" open="(" close=")" separator=",">
+            #{unit.unitOwningUserId}
+        </foreach>
+    </delete>
+
 </mapper>

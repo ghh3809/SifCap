@@ -13,7 +13,9 @@ import com.kotoumi.sifcap.model.po.User;
 
 import java.io.IOException;
 import java.io.Reader;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * @author guohaohao
@@ -102,6 +104,28 @@ public class Dao {
     public static void batchDeleteUnit(int userId) {
         try (SqlSession session = SQL_MAPPER.openSession()) {
             session.delete("batchDeleteUnit", userId);
+            session.commit();
+        }
+    }
+
+    /**
+     * 批量删除卡组信息
+     */
+    public static Unit checkValidUnit(int userId) {
+        try (SqlSession session = SQL_MAPPER.openSession()) {
+            return session.selectOne("checkValidUnit", userId);
+        }
+    }
+
+    /**
+     * 批量删除卡组信息
+     */
+    public static void batchDeleteSelectUnit(int userId, List<Unit> unitList) {
+        try (SqlSession session = SQL_MAPPER.openSession()) {
+            Map<String, Object> params = new HashMap<>();
+            params.put("userId", userId);
+            params.put("unitList", unitList);
+            session.delete("batchDeleteSelectUnit", params);
             session.commit();
         }
     }

@@ -17,7 +17,7 @@ public class Unit {
      */
     private Integer userId;
     /**
-     * 成员状态：active/waiting
+     * 成员状态：active/waiting/deck
      */
     private String status;
     /**
