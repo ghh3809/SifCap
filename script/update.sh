@@ -9,7 +9,8 @@ echo "Current Dir: $workdir"
 # 参数设定
 SQLITE3_CMD="/usr/bin/sqlite3"
 MYSQL_CMD=`cat db.conf`
-DB_URL="https://r.llsif.win/db/"
+DB_URL_CN="https://card.niconi.co.ni/db/"
+DB_URL_JP="https://r.llsif.win/db/"
 mkdir -p bak
 mkdir -p logs
 
@@ -23,31 +24,43 @@ function wlog() {
 
 # 执行更新任务
 function update() {
-    local file=$1
+    local lang=$1
+    local file=$2
+    local subfile=${3:-$file}
     suffix=`date +"%Y%m%d%H%M%S"`
-    mv ${file}.db_ bak/${file}.db_.$suffix
-    mv ${file}.sql bak/${file}.sql.$suffix
-    download ${file}
-    if [ ! -f "${file}.db_" ]; then
-        echo "Download ${file}.db_ failed, exit!"
+    rm -f ${subfile}.db_
+    rm -f ${subfile}.sql
+    download ${lang} ${file} ${subfile}
+    if [ ! -f "${subfile}.db_" ]; then
+        echo "Download ${subfile}.db_ failed, exit!"
         exit 1
     fi
-    transform ${file}.db_ ${file}.sql
-    execute ${file}.sql
+    transform ${lang} ${subfile}.db_ ${subfile}.sql
+    execute ${subfile}.sql
+    mv ${subfile}.db_ bak/${subfile}-${lang}.db_.$suffix
+    mv ${subfile}.sql bak/${subfile}-${lang}.sql.$suffix
 }
 
 # 下载db文件
 function download() {
-    local file=$1
-    wlog "Downloding file from ${DB_URL}/${file}/${file}.db_ ..."
-    wget "${DB_URL}/${file}/${file}.db_"
+    local lang=$1
+    local file=$2
+    local subfile=${3:-$file}
+    if [ "$lang" == "cn" ]; then
+        DB_URL=$DB_URL_CN
+    else
+        DB_URL=$DB_URL_JP
+    fi
+    wlog "Downloding file from ${DB_URL}/${file}/${subfile}.db_ ..."
+    curl -b "dbLocalize=CN" "${DB_URL}/${file}/${subfile}.db_" > ${subfile}.db_
     wlog "Download finish!"
 }
 
 # 转换为MYSQL格式
 function transform() {
-    local dbfile=$1
-    local file=$2
+    local lang=$1
+    local dbfile=$2
+    local file=$3
     wlog "Transforming file $dbfile to $file ..."
     $SQLITE3_CMD $dbfile .dump > $file
     # 删除首行
@@ -55,10 +68,11 @@ function transform() {
     # 替换BEGIN TRANSACTION
     sed -i '1c BEGIN;' $file
     # 替换CREATE TABLE
-    sed -i 's/CREATE TABLE `\(.*\)`/DROP TABLE IF EXISTS `\1`; CREATE TABLE IF NOT EXISTS `\1`/g' $file
+    sed -i 's/CREATE TABLE `\(.*\)`/DROP TABLE IF EXISTS `\1_'$lang'`; CREATE TABLE IF NOT EXISTS `\1_'$lang'`/g' $file
     # 替换双引号
-    sed -i 's/INSERT INTO "/INSERT INTO /g' $file
-    sed -i 's/" VALUES/ VALUES/g' $file
+    sed -i 's/INSERT INTO "\(.*\)" VALUES/INSERT INTO \1_'$lang' VALUES/g' $file
+    # 替换index
+    sed -i 's/CREATE INDEX `\(.*\)` ON `\(.*\)`(/CREATE INDEX `\1` ON `\2_'$lang'`(/g' $file
     # 替换TEXT
     sed -i 's/TEXT/VARCHAR(128)/g' $file
     # 自定义替换字段
@@ -75,6 +89,9 @@ function execute() {
     wlog "Execute finish!"
 }
 
-update live
-update unit
+for lang in 'cn' 'jp'; do
+    wlog "Executing language for: $lang"
+    update $lang live
+    update $lang unit
+done
 wlog "Update finish!"
