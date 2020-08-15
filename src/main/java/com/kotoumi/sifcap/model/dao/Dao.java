@@ -1,6 +1,7 @@
 package com.kotoumi.sifcap.model.dao;
 
 import com.kotoumi.sifcap.model.po.Deck;
+import com.kotoumi.sifcap.model.po.Effort;
 import com.kotoumi.sifcap.model.po.RemovableSkillEquipment;
 import com.kotoumi.sifcap.model.po.SecretBox;
 import com.kotoumi.sifcap.model.po.Unit;
@@ -179,6 +180,17 @@ public class Dao {
     public static void batchDeleteRemovableSkillEquipment(int userId) {
         try (SqlSession session = SQL_MAPPER.openSession()) {
             session.delete("batchDeleteRemovableSkillEquipment", userId);
+            session.commit();
+        }
+    }
+
+    /**
+     * 批量插入队伍信息
+     * @param list 箱子列表
+     */
+    public static void batchAddEffort(List<Effort> list) {
+        try (SqlSession session = SQL_MAPPER.openSession()) {
+            session.insert("batchAddEffort", list);
             session.commit();
         }
     }

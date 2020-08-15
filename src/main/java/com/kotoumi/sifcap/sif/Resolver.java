@@ -5,6 +5,7 @@ import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.kotoumi.sifcap.model.dao.Dao;
 import com.kotoumi.sifcap.model.po.Deck;
+import com.kotoumi.sifcap.model.po.Effort;
 import com.kotoumi.sifcap.model.po.RemovableSkillEquipment;
 import com.kotoumi.sifcap.model.po.SecretBox;
 import com.kotoumi.sifcap.model.po.Unit;
@@ -415,34 +416,68 @@ public class Resolver {
 
         // 更新其他信息
         JSONArray unitListJson = null;
+        List<Effort> effortList = new ArrayList<>();
         livePlay.setUserId(userId);
         try {
-            if (responseJson.containsKey("live_info")) {
-                JSONArray liveInfo = responseJson.getJSONArray("live_info");
-                if (!liveInfo.isEmpty()) {
-                    if (liveInfo.size() > 1) {
-                        log.info("Ignore multi live info: {}", liveInfo.size());
-                    }
-                    JSONObject live = liveInfo.getJSONObject(0);
-                    livePlay.setLiveDifficultyId(live.getInteger("live_difficulty_id"));
-                    livePlay.setIsRandom(live.getBoolean("is_random"));
-                    livePlay.setAcFlag(live.getInteger("ac_flag"));
-                    livePlay.setSwingFlag(live.getInteger("swing_flag"));
-                }
+            JSONArray liveInfo;
+            JSONObject baseRewardInfo;
+
+            // 根据场景不同，需要提取不同的live信息和奖励信息
+            if (responseJson.containsKey("challenge_result")) {
+                JSONObject challengeResult = responseJson.getJSONObject("challenge_result");
+                liveInfo = challengeResult.getJSONArray("live_info");
+                baseRewardInfo = challengeResult.getJSONObject("reward_info");
+            } else {
+                liveInfo = responseJson.getJSONArray("live_info");
+                baseRewardInfo = responseJson.getJSONObject("base_reward_info");
             }
-            if (responseJson.containsKey("base_reward_info")) {
-                JSONObject baseRewardInfo = responseJson.getJSONObject("base_reward_info");
+
+            // 从live信息和奖励信息中提取数据
+            if (liveInfo != null && !liveInfo.isEmpty()) {
+                if (liveInfo.size() > 1) {
+                    log.info("Ignore multi live info: {}", liveInfo.size());
+                }
+                JSONObject live = liveInfo.getJSONObject(0);
+                livePlay.setLiveDifficultyId(live.getInteger("live_difficulty_id"));
+                livePlay.setIsRandom(live.getBoolean("is_random"));
+                livePlay.setAcFlag(live.getInteger("ac_flag"));
+                livePlay.setSwingFlag(live.getInteger("swing_flag"));
+            }
+            if (baseRewardInfo != null) {
                 livePlay.setExpCnt(baseRewardInfo.getInteger("player_exp"));
                 livePlay.setGameCoinCnt(baseRewardInfo.getInteger("game_coin"));
                 livePlay.setSocialPointCnt(baseRewardInfo.getInteger("social_point"));
             }
+
+            // 提取打歌队伍信息
             if (responseJson.containsKey("unit_list")) {
                 unitListJson = responseJson.getJSONArray("unit_list");
                 livePlay.setUnitListJson(unitListJson.toJSONString());
             }
+
+            // 提取打歌时间
             if (responseJson.containsKey("server_timestamp")) {
                 livePlay.setPlayTime(SIMPLE_DATE_FORMAT.format(new Date(responseJson.getLong("server_timestamp") * 1000)));
             }
+
+            // 提取奖励箱子信息
+            if (responseJson.containsKey("effort_point")) {
+                JSONArray effortPointJsonList = responseJson.getJSONArray("effort_point");
+                for (int i = 0; i < effortPointJsonList.size(); i ++) {
+                    JSONObject effortPointJson = effortPointJsonList.getJSONObject(i);
+                    if (effortPointJson.containsKey("rewards")) {
+                        JSONArray rewardsJson = effortPointJson.getJSONArray("rewards");
+                        if (rewardsJson.size() > 0) {
+                            Effort effort = effortPointJson.toJavaObject(Effort.class);
+                            effort.setUserId(userId);
+                            effort.setRewardsJson(rewardsJson.toJSONString());
+                            effort.setOpenTime(livePlay.getPlayTime());
+                            effortList.add(effort);
+                        }
+                    }
+                }
+            }
+
         } catch (Exception e) {
             log.error("Resolve live play info failed");
         }
@@ -472,12 +507,15 @@ public class Resolver {
                 unitList.add(unit);
             }
 
-            // 检查该成员是否有unitAll接口得到的成员信息，如果没有，则数据更新入库
-            if (Dao.checkValidUnit(userId) == null) {
-                Dao.batchDeleteSelectUnit(userId, unitList);
-                Dao.batchAddUnit(unitList);
-            }
+            // 数据更新入库
+            Dao.batchDeleteSelectUnit(userId, unitList);
+            Dao.batchAddUnit(unitList);
 
+        }
+
+        // 尝试入库箱子信息
+        if (!effortList.isEmpty()) {
+            Dao.batchAddEffort(effortList);
         }
 
     }

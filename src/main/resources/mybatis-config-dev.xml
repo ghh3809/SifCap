@@ -25,6 +25,7 @@
         <mapper resource="mapper/secretBoxMapper.xml"/>
         <mapper resource="mapper/deckMapper.xml"/>
         <mapper resource="mapper/removableMapper.xml"/>
+        <mapper resource="mapper/effortMapper.xml"/>
     </mappers>
 
 </configuration>

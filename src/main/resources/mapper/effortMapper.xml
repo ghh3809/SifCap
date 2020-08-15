@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="mapper">
+
+    <insert id="batchAddEffort">
+        insert into effort_box (
+            user_id, live_effort_point_box_spec_id, limited_effort_event_id,
+            capacity, rewards_json, open_time
+        ) values
+        <foreach collection="list" item="effort" separator=",">
+            (#{effort.userId}, #{effort.liveEffortPointBoxSpecId}, #{effort.limitedEffortEventId},
+             #{effort.capacity}, #{effort.rewardsJson}, #{effort.openTime})
+        </foreach>
+    </insert>
+
+</mapper>

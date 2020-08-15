@@ -150,3 +150,15 @@ CREATE TABLE `removable_skill_equipment` (
     PRIMARY KEY (`id`),
     KEY `user_id` (`user_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='宝石信息';
+
+CREATE TABLE `effort_box` (
+    `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT '自增id',
+    `user_id` int(11) NOT NULL COMMENT '用户id',
+    `live_effort_point_box_spec_id` int(11) DEFAULT NULL COMMENT '箱子类型1-5，按顺序对应10/40/100/200/400箱子',
+    `limited_effort_event_id` int(11) DEFAULT NULL COMMENT '蛋的eventId',
+    `capacity` int(11) DEFAULT NULL COMMENT '容量',
+    `rewards_json` text COMMENT '奖励JSON，要求不为空',
+    `open_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (`id`),
+    KEY `user_id` (`user_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='开箱信息';

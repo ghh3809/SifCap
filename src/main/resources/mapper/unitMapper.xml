@@ -35,6 +35,7 @@
         <foreach collection="unitList" item="unit" index="index" open="(" close=")" separator=",">
             #{unit.unitOwningUserId}
         </foreach>
+        and status = 'deck'
     </delete>
 
 </mapper>
