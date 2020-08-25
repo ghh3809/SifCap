@@ -10,9 +10,9 @@
             user_id, live_effort_point_box_spec_id, limited_effort_event_id,
             capacity, rewards_json, open_time
         ) values
-        <foreach collection="list" item="effort" separator=",">
-            (#{effort.userId}, #{effort.liveEffortPointBoxSpecId}, #{effort.limitedEffortEventId},
-             #{effort.capacity}, #{effort.rewardsJson}, #{effort.openTime})
+        <foreach collection="list" item="effortBox" separator=",">
+            (#{effortBox.userId}, #{effortBox.liveEffortPointBoxSpecId}, #{effortBox.limitedEffortEventId},
+             #{effortBox.capacity}, #{effortBox.rewardsJson}, #{effortBox.openTime})
         </foreach>
     </insert>
 

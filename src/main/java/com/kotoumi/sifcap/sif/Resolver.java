@@ -5,7 +5,7 @@ import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.kotoumi.sifcap.model.dao.Dao;
 import com.kotoumi.sifcap.model.po.Deck;
-import com.kotoumi.sifcap.model.po.Effort;
+import com.kotoumi.sifcap.model.po.EffortBox;
 import com.kotoumi.sifcap.model.po.RemovableSkillEquipment;
 import com.kotoumi.sifcap.model.po.SecretBox;
 import com.kotoumi.sifcap.model.po.Unit;
@@ -416,7 +416,7 @@ public class Resolver {
 
         // 更新其他信息
         JSONArray unitListJson = null;
-        List<Effort> effortList = new ArrayList<>();
+        List<EffortBox> effortBoxList = new ArrayList<>();
         livePlay.setUserId(userId);
         try {
             JSONArray liveInfo;
@@ -468,11 +468,11 @@ public class Resolver {
                     if (effortPointJson.containsKey("rewards")) {
                         JSONArray rewardsJson = effortPointJson.getJSONArray("rewards");
                         if (rewardsJson.size() > 0) {
-                            Effort effort = effortPointJson.toJavaObject(Effort.class);
-                            effort.setUserId(userId);
-                            effort.setRewardsJson(rewardsJson.toJSONString());
-                            effort.setOpenTime(livePlay.getPlayTime());
-                            effortList.add(effort);
+                            EffortBox effortBox = effortPointJson.toJavaObject(EffortBox.class);
+                            effortBox.setUserId(userId);
+                            effortBox.setRewardsJson(rewardsJson.toJSONString());
+                            effortBox.setOpenTime(livePlay.getPlayTime());
+                            effortBoxList.add(effortBox);
                         }
                     }
                 }
@@ -514,8 +514,8 @@ public class Resolver {
         }
 
         // 尝试入库箱子信息
-        if (!effortList.isEmpty()) {
-            Dao.batchAddEffort(effortList);
+        if (!effortBoxList.isEmpty()) {
+            Dao.batchAddEffort(effortBoxList);
         }
 
     }

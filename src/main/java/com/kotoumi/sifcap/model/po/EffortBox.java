@@ -6,7 +6,7 @@ import lombok.Data;
  * @author guohaohao
  */
 @Data
-public class Effort {
+public class EffortBox {
 
     /**
      * 自增ID

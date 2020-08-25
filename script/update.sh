@@ -78,6 +78,7 @@ function transform() {
     # 自定义替换字段
     sed -i 's/`release_tag` VARCHAR(128)/`release_tag` VARCHAR(4096)/g' $file
     sed -i 's/`long_description` VARCHAR(128)/`long_description` VARCHAR(1024)/g' $file
+    sed -i '/INSERT INTO strings_m_/d' $file
     wlog "Transform finish!"
 }
 
@@ -93,5 +94,8 @@ for lang in 'cn' 'jp'; do
     wlog "Executing language for: $lang"
     update $lang live
     update $lang unit
+    #update $lang common game_mater
+    update $lang item
+    #update $lang effort
 done
 wlog "Update finish!"
