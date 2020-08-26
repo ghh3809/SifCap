@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="mapper">
+
+    <insert id="insertDuelLiveBox" parameterType="com.kotoumi.sifcap.model.po.DuelLiveBox">
+        insert into duel_live_box set user_id = #{userId}
+        <if test="scoreRank != null">
+            , score_rank = #{scoreRank}
+        </if>
+        <if test="comboRank != null">
+            , combo_rank = #{comboRank}
+        </if>
+        <if test="liveClearJson != null">
+            , live_clear_json = #{liveClearJson}
+        </if>
+        <if test="liveRankJson != null">
+            , live_rank_json = #{liveRankJson}
+        </if>
+        <if test="liveComboJson != null">
+            , live_combo_json = #{liveComboJson}
+        </if>
+        <if test="openTime != null">
+            , open_time = #{openTime}
+        </if>
+    </insert>
+
+</mapper>

@@ -1,6 +1,7 @@
 package com.kotoumi.sifcap.model.dao;
 
 import com.kotoumi.sifcap.model.po.Deck;
+import com.kotoumi.sifcap.model.po.DuelLiveBox;
 import com.kotoumi.sifcap.model.po.EffortBox;
 import com.kotoumi.sifcap.model.po.RemovableSkillEquipment;
 import com.kotoumi.sifcap.model.po.SecretBox;
@@ -191,6 +192,17 @@ public class Dao {
     public static void batchAddEffort(List<EffortBox> list) {
         try (SqlSession session = SQL_MAPPER.openSession()) {
             session.insert("batchAddEffort", list);
+            session.commit();
+        }
+    }
+
+    /**
+     * 插入百人协力奖励记录
+     * @param duelLiveBox 百人协力奖励记录
+     */
+    public static void insertDuelLiveBox(DuelLiveBox duelLiveBox) {
+        try (SqlSession session = SQL_MAPPER.openSession()) {
+            session.insert("insertDuelLiveBox", duelLiveBox);
             session.commit();
         }
     }

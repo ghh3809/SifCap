@@ -49,6 +49,18 @@ public class MapperTest {
     }
 
     @Test
+    public void testDuelLivePlay() {
+        int userId = 6669728;
+        List<String> requestLines = FileHelper.readLines("src/test/java/data/duelLivePlay.request");
+        List<String> responseLines = FileHelper.readLines("src/test/java/data/duelLivePlay.response");
+        TestCase.assertNotNull(requestLines);
+        TestCase.assertNotNull(responseLines);
+        for (int i = 0; i < Math.min(requestLines.size(), responseLines.size()); i ++) {
+            Resolver.recordDuelLiveInfo(userId, JSON.parseObject(requestLines.get(i)), JSON.parseObject(responseLines.get(i)));
+        }
+    }
+
+    @Test
     public void testProfileInfo() {
         int userId = 6669728;
         List<String> requestLines = FileHelper.readLines("src/test/java/data/profileInfo.request");

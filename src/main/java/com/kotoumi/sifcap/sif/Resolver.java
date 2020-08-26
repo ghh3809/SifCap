@@ -5,6 +5,7 @@ import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.kotoumi.sifcap.model.dao.Dao;
 import com.kotoumi.sifcap.model.po.Deck;
+import com.kotoumi.sifcap.model.po.DuelLiveBox;
 import com.kotoumi.sifcap.model.po.EffortBox;
 import com.kotoumi.sifcap.model.po.RemovableSkillEquipment;
 import com.kotoumi.sifcap.model.po.SecretBox;
@@ -102,7 +103,6 @@ public class Resolver {
             process(userId, requestUrl, requestJson, responseJson);
         } catch (Exception e) {
             log.error("Process requestResponsePair failed");
-            return;
         }
 
     }
@@ -217,13 +217,19 @@ public class Resolver {
             case "unit/removableSkillInfo":
                 updateRemovableSkillInfo(userId, responseJson);
                 break;
-            // SM活动
+            // SM活动 or 百人协力活动
             case "battle/liveEnd":
+            case "duel/liveEnd":
                 CACHED_LIVE.put(userId, requestJson);
                 break;
             case "battle/endRoom":
                 if (CACHED_LIVE.containsKey(userId)) {
                     recordLiveInfo(userId, CACHED_LIVE.remove(userId), responseJson);
+                }
+                break;
+            case "duel/endRoom":
+                if (CACHED_LIVE.containsKey(userId)) {
+                    recordDuelLiveInfo(userId, CACHED_LIVE.remove(userId), responseJson);
                 }
                 break;
             // CF活动
@@ -517,6 +523,105 @@ public class Resolver {
         if (!effortBoxList.isEmpty()) {
             Dao.batchAddEffort(effortBoxList);
         }
+
+    }
+
+    /**
+     * 记录百人协力演唱会信息
+     * @param userId 用户ID
+     * @param requestJson 请求JSON
+     * @param responseJson 响应JSON
+     */
+    public static void recordDuelLiveInfo(int userId, JSONObject requestJson, JSONObject responseJson) {
+
+        // 初始化
+        DuelLiveBox duelLiveBox = new DuelLiveBox();
+        LivePlay livePlay = requestJson.toJavaObject(LivePlay.class);
+        livePlay.setEventId(-1);
+
+        // 更新其他信息
+        JSONArray unitListJson = null;
+        livePlay.setUserId(userId);
+        duelLiveBox.setUserId(userId);
+        try {
+            JSONObject baseRewardInfo;
+
+            // 根据场景不同，需要提取不同的live信息和奖励信息
+            baseRewardInfo = responseJson.getJSONObject("base_reward_info");
+
+            // 从live信息和奖励信息中提取数据
+            if (baseRewardInfo != null) {
+                livePlay.setExpCnt(baseRewardInfo.getInteger("player_exp"));
+                livePlay.setGameCoinCnt(baseRewardInfo.getInteger("game_coin"));
+                livePlay.setSocialPointCnt(baseRewardInfo.getInteger("social_point"));
+            }
+
+            // 提取打歌队伍信息
+            if (responseJson.containsKey("unit_list")) {
+                unitListJson = responseJson.getJSONArray("unit_list");
+                livePlay.setUnitListJson(unitListJson.toJSONString());
+            }
+
+            // 提取打歌时间
+            if (responseJson.containsKey("server_timestamp")) {
+                String time = SIMPLE_DATE_FORMAT.format(new Date(responseJson.getLong("server_timestamp") * 1000));
+                livePlay.setPlayTime(time);
+                duelLiveBox.setOpenTime(time);
+            }
+
+            // 提取live箱子信息
+            if (responseJson.containsKey("reward_item_list")) {
+                JSONObject rewardItemList = responseJson.getJSONObject("reward_item_list");
+                if (rewardItemList.containsKey("live_clear")) {
+                    duelLiveBox.setLiveClearJson(rewardItemList.getJSONArray("live_clear").toJSONString());
+                }
+                if (rewardItemList.containsKey("live_rank")) {
+                    duelLiveBox.setLiveRankJson(rewardItemList.getJSONArray("live_rank").toJSONString());
+                }
+                if (rewardItemList.containsKey("live_combo")) {
+                    duelLiveBox.setLiveComboJson(rewardItemList.getJSONArray("live_combo").toJSONString());
+                }
+                duelLiveBox.setScoreRank(responseJson.getInteger("score_rank"));
+                duelLiveBox.setComboRank(responseJson.getInteger("combo_rank"));
+            }
+
+        } catch (Exception e) {
+            log.error("Resolve live play info failed");
+        }
+
+        // 入库
+        Dao.insertLivePlay(livePlay);
+
+        // 尝试更新用户信息
+        if (responseJson.containsKey("after_user_info")) {
+            User user = responseJson.getJSONObject("after_user_info").toJavaObject(User.class);
+            user.setUserId(userId);
+            Dao.updateUser(user);
+        }
+
+        // 尝试入库成员信息
+        if (unitListJson != null) {
+            // 获取所有成员的unitOwningUserId
+            List<Unit> unitList = new ArrayList<>(9);
+            for (int i = 0; i < unitListJson.size(); i++) {
+                JSONObject unitJson = unitListJson.getJSONObject(i);
+                Unit unit = unitJson.toJavaObject(Unit.class);
+                unit.setUserId(userId);
+                unit.setStatus("deck");
+                unit.setRank(unit.getIsRankMax() ? 2 : 1);
+                unit.setDisplayRank(unit.getRank());
+                unit.setUnitRemovableSkillCapacity(4);
+                unitList.add(unit);
+            }
+
+            // 数据更新入库
+            Dao.batchDeleteSelectUnit(userId, unitList);
+            Dao.batchAddUnit(unitList);
+
+        }
+
+        // 尝试入库live奖励箱子信息
+        Dao.insertDuelLiveBox(duelLiveBox);
 
     }
 
