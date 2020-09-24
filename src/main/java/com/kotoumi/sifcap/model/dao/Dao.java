@@ -3,6 +3,7 @@ package com.kotoumi.sifcap.model.dao;
 import com.kotoumi.sifcap.model.po.Deck;
 import com.kotoumi.sifcap.model.po.DuelLiveBox;
 import com.kotoumi.sifcap.model.po.EffortBox;
+import com.kotoumi.sifcap.model.po.LpRecovery;
 import com.kotoumi.sifcap.model.po.RemovableSkillEquipment;
 import com.kotoumi.sifcap.model.po.SecretBox;
 import com.kotoumi.sifcap.model.po.Unit;
@@ -203,6 +204,17 @@ public class Dao {
     public static void insertDuelLiveBox(DuelLiveBox duelLiveBox) {
         try (SqlSession session = SQL_MAPPER.openSession()) {
             session.insert("insertDuelLiveBox", duelLiveBox);
+            session.commit();
+        }
+    }
+
+    /**
+     * 插入LP回复记录
+     * @param lpRecovery LP回复记录
+     */
+    public static void insertLpRecovery(LpRecovery lpRecovery) {
+        try (SqlSession session = SQL_MAPPER.openSession()) {
+            session.insert("insertLpRecovery", lpRecovery);
             session.commit();
         }
     }

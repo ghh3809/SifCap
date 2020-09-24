@@ -7,6 +7,7 @@ import com.kotoumi.sifcap.model.dao.Dao;
 import com.kotoumi.sifcap.model.po.Deck;
 import com.kotoumi.sifcap.model.po.DuelLiveBox;
 import com.kotoumi.sifcap.model.po.EffortBox;
+import com.kotoumi.sifcap.model.po.LpRecovery;
 import com.kotoumi.sifcap.model.po.RemovableSkillEquipment;
 import com.kotoumi.sifcap.model.po.SecretBox;
 import com.kotoumi.sifcap.model.po.Unit;
@@ -249,6 +250,9 @@ public class Resolver {
             case "secretbox/pon":
             case "secretbox/multi":
                 recordSecretBoxInfo(userId, responseJson);
+                break;
+            case "common/recoveryEnergy":
+                recordRecoveryEnergy(userId, requestJson, responseJson);
                 break;
             default:
                 log.info("Ignore url: {}", requestUrl);
@@ -671,6 +675,32 @@ public class Resolver {
             user.setUserId(userId);
             Dao.updateUser(user);
         }
+
+    }
+
+    /**
+     * 记录LP恢复信息
+     * @param userId 用户ID
+     * @param requestJson 请求JSON
+     * @param responseJson 响应JSON
+     */
+    public static void recordRecoveryEnergy(int userId, JSONObject requestJson, JSONObject responseJson) {
+
+        // 检查必须项
+        if (!responseJson.containsKey("server_timestamp") || !responseJson.containsKey("energy_max") ||
+                !requestJson.containsKey("item_id") || !requestJson.containsKey("amount")) {
+            log.error("Invalid recovery energy request/response");
+        }
+
+        LpRecovery lpRecovery = new LpRecovery();
+        lpRecovery.setUserId(userId);
+        lpRecovery.setRecoveryTime(SIMPLE_DATE_FORMAT.format(new Date(responseJson.getLong("server_timestamp") * 1000)));
+        lpRecovery.setItemId(requestJson.getInteger("item_id"));
+        lpRecovery.setAmount(requestJson.getInteger("amount"));
+        lpRecovery.setEnergyMax(responseJson.getInteger("energy_max"));
+
+        // 入库
+        Dao.insertLpRecovery(lpRecovery);
 
     }
 
