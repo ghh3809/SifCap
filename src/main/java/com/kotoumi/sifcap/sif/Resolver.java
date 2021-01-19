@@ -218,12 +218,14 @@ public class Resolver {
             case "unit/removableSkillInfo":
                 updateRemovableSkillInfo(userId, responseJson);
                 break;
-            // SM活动 or 百人协力活动
+            // SM活动 or 百人协力活动 or 协力活动
             case "battle/liveEnd":
             case "duel/liveEnd":
+            case "duty/liveEnd":
                 CACHED_LIVE.put(userId, requestJson);
                 break;
             case "battle/endRoom":
+            case "duty/endRoom":
                 if (CACHED_LIVE.containsKey(userId)) {
                     recordLiveInfo(userId, CACHED_LIVE.remove(userId), responseJson);
                 }
@@ -235,8 +237,6 @@ public class Resolver {
                 break;
             // CF活动
             case "challenge/checkpoint":
-            // 协力活动
-            case "duty/liveEnd":
             // 散步拉力赛
             case "quest/questReward":
             // MF活动
@@ -438,8 +438,22 @@ public class Resolver {
                 liveInfo = challengeResult.getJSONArray("live_info");
                 baseRewardInfo = challengeResult.getJSONObject("reward_info");
             } else {
-                liveInfo = responseJson.getJSONArray("live_info");
+                if (responseJson.containsKey("live_result")) {
+                    Long serverTimestamp = responseJson.getLong("server_timestamp");
+                    responseJson = responseJson.getJSONObject("live_result");
+                    responseJson.put("server_timestamp", serverTimestamp);
+                }
+                if (responseJson.containsKey("live_list")) {
+                    liveInfo = responseJson.getJSONArray("live_list");
+                } else {
+                    liveInfo = responseJson.getJSONArray("live_info");
+                }
                 baseRewardInfo = responseJson.getJSONObject("base_reward_info");
+            }
+
+            // 过滤异常记录
+            if ((liveInfo == null || liveInfo.isEmpty()) && (baseRewardInfo == null || baseRewardInfo.isEmpty())) {
+                return;
             }
 
             // 从live信息和奖励信息中提取数据
