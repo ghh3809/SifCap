@@ -71,6 +71,8 @@ CREATE TABLE `live_play` (
 CREATE TABLE `event_map` (
     `event_id` int(11) NOT NULL COMMENT '活动ID',
     `event_name` varchar(128) NOT NULL COMMENT '活动名称',
+    `start_time` datetime COMMENT '开始时间',
+    `end_time` datetime COMMENT '结束时间',
     PRIMARY KEY (`event_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='活动名称对应表';
 
@@ -162,3 +164,26 @@ CREATE TABLE `effort_box` (
     PRIMARY KEY (`id`),
     KEY `user_id` (`user_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='开箱信息';
+
+CREATE TABLE `event_request` (
+    `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT '自增id',
+    `user_id` int(11) NOT NULL COMMENT '用户id',
+    `event_id` int(11) DEFAULT '0' COMMENT '活动ID',
+    `type` varchar(10) DEFAULT NULL COMMENT '档线类型，pt（活动点数榜）/live（歌榜）',
+    `rank` int(11) DEFAULT NULL COMMENT '排名',
+    `request_headers` text COMMENT '请求头',
+    `request_data` text COMMENT '请求体',
+    `request_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    `enable` int(11) NOT NULL DEFAULT 1,
+    PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='排行请求信息';
+
+CREATE TABLE `event_rank` (
+    `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT '自增id',
+    `event_id` int(11) DEFAULT '0' COMMENT '活动ID',
+    `type` varchar(10) DEFAULT NULL COMMENT '档线类型，pt（活动点数榜）/live（歌榜）',
+    `rank` int(11) DEFAULT NULL COMMENT '排名',
+    `score` int(11) DEFAULT NULL COMMENT '分数',
+    `request_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='排行信息';

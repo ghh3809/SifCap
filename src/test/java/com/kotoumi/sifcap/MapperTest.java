@@ -1,13 +1,16 @@
 package com.kotoumi.sifcap;
 
 import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.TypeReference;
 import com.kotoumi.sifcap.sif.Resolver;
 import com.kotoumi.sifcap.utils.FileHelper;
 import junit.framework.TestCase;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Test;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Slf4j
 public class MapperTest {
@@ -129,6 +132,21 @@ public class MapperTest {
         TestCase.assertNotNull(responseLines);
         for (int i = 0; i < Math.min(requestLines.size(), responseLines.size()); i ++) {
             Resolver.recordRecoveryEnergy(userId, JSON.parseObject(requestLines.get(i)), JSON.parseObject(responseLines.get(i)));
+        }
+    }
+
+    @Test
+    public void testEventRequest() {
+        int userId = 6669728;
+        List<String> headerLines = FileHelper.readLines("src/test/java/data/eventPlayer.header");
+        List<String> requestLines = FileHelper.readLines("src/test/java/data/eventPlayer.request");
+        List<String> responseLines = FileHelper.readLines("src/test/java/data/eventPlayer.response");
+        TestCase.assertNotNull(headerLines);
+        TestCase.assertNotNull(requestLines);
+        TestCase.assertNotNull(responseLines);
+        for (int i = 0; i < Math.min(requestLines.size(), responseLines.size()); i ++) {
+            Resolver.saveEventRequest(userId, JSON.parseObject(requestLines.get(i)), JSON.parseObject(responseLines.get(i)),
+                    requestLines.get(i), JSON.parseObject(headerLines.get(i), new TypeReference<Map<String, String>>() { }), "pt");
         }
     }
 

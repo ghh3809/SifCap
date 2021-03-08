@@ -28,6 +28,7 @@
         <mapper resource="mapper/effortMapper.xml"/>
         <mapper resource="mapper/liveBoxMapper.xml"/>
         <mapper resource="mapper/recoveryMapper.xml"/>
+        <mapper resource="mapper/eventMapper.xml"/>
     </mappers>
 
 </configuration>

@@ -1,18 +1,10 @@
 package com.kotoumi.sifcap.model.dao;
 
-import com.kotoumi.sifcap.model.po.Deck;
-import com.kotoumi.sifcap.model.po.DuelLiveBox;
-import com.kotoumi.sifcap.model.po.EffortBox;
-import com.kotoumi.sifcap.model.po.LpRecovery;
-import com.kotoumi.sifcap.model.po.RemovableSkillEquipment;
-import com.kotoumi.sifcap.model.po.SecretBox;
-import com.kotoumi.sifcap.model.po.Unit;
+import com.kotoumi.sifcap.model.po.*;
 import org.apache.ibatis.io.Resources;
 import org.apache.ibatis.session.SqlSession;
 import org.apache.ibatis.session.SqlSessionFactory;
 import org.apache.ibatis.session.SqlSessionFactoryBuilder;
-import com.kotoumi.sifcap.model.po.LivePlay;
-import com.kotoumi.sifcap.model.po.User;
 
 import java.io.IOException;
 import java.io.Reader;
@@ -216,6 +208,52 @@ public class Dao {
         try (SqlSession session = SQL_MAPPER.openSession()) {
             session.insert("insertLpRecovery", lpRecovery);
             session.commit();
+        }
+    }
+
+    /**
+     * 插入排名请求数据
+     * @param eventRequest 排名请求数据
+     */
+    public static void insertEventRequest(EventRequest eventRequest) {
+        try (SqlSession session = SQL_MAPPER.openSession()) {
+            session.insert("insertEventRequest", eventRequest);
+            session.commit();
+        }
+    }
+
+    /**
+     * 插入排名数据
+     * @param eventRank 排名数据
+     */
+    public static void insertEventRank(EventRank eventRank) {
+        try (SqlSession session = SQL_MAPPER.openSession()) {
+            session.insert("insertEventRank", eventRank);
+            session.commit();
+        }
+    }
+
+    /**
+     * 获取当前正在进行的活动
+     * @return 正在进行的活动ID
+     */
+    public static Integer getCurrentEventId() {
+        try (SqlSession session = SQL_MAPPER.openSession()) {
+            return session.selectOne("getCurrentEventId");
+        }
+    }
+
+    /**
+     * 获取当前活动下获得排名信息的request（最近10条）
+     * @return 排名信息的request
+     */
+    public static List<EventRequest> getEventRequests(int eventId, String type, int rank) {
+        try (SqlSession session = SQL_MAPPER.openSession()) {
+            Map<String, Object> params = new HashMap<>();
+            params.put("eventId", eventId);
+            params.put("type", type);
+            params.put("rank", rank);
+            return session.selectList("findEventRequests", params);
         }
     }
 

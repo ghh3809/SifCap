@@ -1,5 +1,6 @@
 package com.kotoumi.sifcap;
 
+import com.kotoumi.sifcap.sif.RankUpdater;
 import lombok.extern.slf4j.Slf4j;
 import org.jnetpcap.Pcap;
 import org.jnetpcap.PcapBpfProgram;
@@ -9,6 +10,11 @@ import com.kotoumi.sifcap.utils.PacketHandler;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Timer;
+import java.util.TimerTask;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 /**
  * 程序的入口，执行抓包命令
@@ -17,7 +23,11 @@ import java.util.List;
 @Slf4j
 public class Capture {
 
+//    private static ScheduledExecutorService scheduledExecutorService = Executors.newScheduledThreadPool(1);
+
     public static void main(String[] args) {
+
+//        scheduledExecutorService.scheduleWithFixedDelay(new RankUpdater(), 1, 1, TimeUnit.MINUTES);
 
         List<PcapIf> alldevs = new ArrayList<>();
         StringBuilder errbuf = new StringBuilder();

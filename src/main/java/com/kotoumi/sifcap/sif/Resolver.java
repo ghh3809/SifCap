@@ -4,21 +4,13 @@ import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.kotoumi.sifcap.model.dao.Dao;
-import com.kotoumi.sifcap.model.po.Deck;
-import com.kotoumi.sifcap.model.po.DuelLiveBox;
-import com.kotoumi.sifcap.model.po.EffortBox;
-import com.kotoumi.sifcap.model.po.LpRecovery;
-import com.kotoumi.sifcap.model.po.RemovableSkillEquipment;
-import com.kotoumi.sifcap.model.po.SecretBox;
-import com.kotoumi.sifcap.model.po.Unit;
+import com.kotoumi.sifcap.model.po.*;
 import com.kotoumi.sifcap.utils.LoggerHelper;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 import com.kotoumi.sifcap.model.HttpData;
 import com.kotoumi.sifcap.model.RequestResponsePair;
-import com.kotoumi.sifcap.model.po.LivePlay;
-import com.kotoumi.sifcap.model.po.User;
 import com.kotoumi.sifcap.utils.CompressHelper;
 
 import java.text.SimpleDateFormat;
@@ -43,6 +35,7 @@ public class Resolver {
     private static final String URL_PREFIX = "/main.php/";
     private static final String URL_API = "api";
     private static final String KEY_REQUEST_DATA = "request_data";
+    private static final String KEY_ORIGIN_REQUEST_DATA = "origin_request_data";
     private static final String KEY_RESPONSE_DATA = "response_data";
     private static final Pattern NAME_PATTERN = Pattern.compile("^Content-Disposition: form-data;.*name=\"([^)]*)\".*$");
     private static final SimpleDateFormat SIMPLE_DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
@@ -58,6 +51,7 @@ public class Resolver {
         String requestUrl;
         JSONObject requestJson;
         JSONObject responseJson;
+        Map<String, String> requestHeaders;
 
         try {
 
@@ -69,6 +63,9 @@ public class Resolver {
                 log.error("HTTP request is null");
                 return;
             }
+            requestHeaders = request.getHeaders();
+            LoggerHelper.logInput("RequestHeader: " + JSON.toJSONString(requestHeaders));
+
             requestUrl = request.getRequestUrl();
             LoggerHelper.logInput("RequestUrl: " + requestUrl);
 
@@ -101,7 +98,7 @@ public class Resolver {
         }
 
         try {
-            process(userId, requestUrl, requestJson, responseJson);
+            process(userId, requestUrl, requestJson, responseJson, requestHeaders);
         } catch (Exception e) {
             log.error("Process requestResponsePair failed");
         }
@@ -115,7 +112,8 @@ public class Resolver {
      * @param requestJson 请求JSON
      * @param responseJson 响应JSON
      */
-    private static void process(int userId, String requestUrl, JSONObject requestJson, JSONObject responseJson) {
+    private static void process(int userId, String requestUrl, JSONObject requestJson, JSONObject responseJson,
+                                Map<String, String> requestHeaders) {
 
         if (!requestUrl.startsWith(URL_PREFIX)) {
             log.error("Could not resolve url: {}", requestUrl);
@@ -155,7 +153,7 @@ public class Resolver {
                 // result层有可能返回的是一个list
                 Object resultObject = response.get("result");
                 if (resultObject instanceof JSONObject) {
-                    processSingle(userId, requestUrl, request, (JSONObject) resultObject);
+                    processSingle(userId, requestUrl, request, (JSONObject) resultObject, null, null);
                 } else {
                     log.debug("Ignore non-object result");
                 }
@@ -177,10 +175,12 @@ public class Resolver {
                 return;
             }
             if (jsonObjectResponse instanceof JSONObject) {
-                processSingle(userId, requestUrl, (JSONObject) jsonObjectRequest, (JSONObject) jsonObjectResponse);
+                processSingle(userId, requestUrl, (JSONObject) jsonObjectRequest, (JSONObject) jsonObjectResponse,
+                        requestJson.getString(KEY_ORIGIN_REQUEST_DATA), requestHeaders);
             } else {
                 log.debug("Ignore non-object request or result");
-                processSingle(userId, requestUrl, (JSONObject) jsonObjectRequest, new JSONObject());
+                processSingle(userId, requestUrl, (JSONObject) jsonObjectRequest, new JSONObject(),
+                        requestJson.getString(KEY_ORIGIN_REQUEST_DATA), requestHeaders);
             }
         }
 
@@ -193,11 +193,13 @@ public class Resolver {
      * @param requestJson 请求JSON
      * @param responseJson 响应JSON
      */
-    private static void processSingle(int userId, String requestUrl, JSONObject requestJson, JSONObject responseJson) {
+    private static void processSingle(int userId, String requestUrl, JSONObject requestJson, JSONObject responseJson,
+                                      String originRequestData, Map<String, String> requestHeaders) {
         log.info("userId: {}", userId);
         log.info("requestUrl: {}", requestUrl);
         log.info("requestJson: {}", requestJson);
         log.info("responseJson: {}", responseJson);
+        log.info("originRequestData: {}", originRequestData);
         switch (requestUrl) {
             // 用户基础信息
             case "user/userInfo":
@@ -253,6 +255,12 @@ public class Resolver {
                 break;
             case "common/recoveryEnergy":
                 recordRecoveryEnergy(userId, requestJson, responseJson);
+                break;
+            case "ranking/eventPlayer":
+                saveEventRequest(userId, requestJson, responseJson, originRequestData, requestHeaders, "pt");
+                break;
+            case "ranking/eventLive":
+                saveEventRequest(userId, requestJson, responseJson, originRequestData, requestHeaders, "live");
                 break;
             default:
                 log.info("Ignore url: {}", requestUrl);
@@ -654,6 +662,7 @@ public class Resolver {
         if (!responseJson.containsKey("secret_box_info") || !responseJson.containsKey("secret_box_items")
                 || !responseJson.containsKey("server_timestamp")) {
             log.error("Invalid secret box response");
+            return;
         }
 
         List<SecretBox> secretBoxList = new ArrayList<>();
@@ -704,6 +713,7 @@ public class Resolver {
         if (!responseJson.containsKey("server_timestamp") || !responseJson.containsKey("energy_max") ||
                 !requestJson.containsKey("item_id") || !requestJson.containsKey("amount")) {
             log.error("Invalid recovery energy request/response");
+            return;
         }
 
         LpRecovery lpRecovery = new LpRecovery();
@@ -715,6 +725,64 @@ public class Resolver {
 
         // 入库
         Dao.insertLpRecovery(lpRecovery);
+
+    }
+
+    /**
+     * 记录排行榜请求信息
+     * @param userId 用户ID
+     * @param requestJson 请求json
+     * @param originRequestData 原始请求的requestData
+     * @param requestHeaders 请求头
+     */
+    public static void saveEventRequest(int userId, JSONObject requestJson, JSONObject responseJson,
+                                        String originRequestData, Map<String, String> requestHeaders, String type) {
+
+        // 检查必须项
+        if (!requestJson.containsKey("event_id") || !requestJson.containsKey("rank")) {
+            log.info("Ignore invalid rank request");
+            return;
+        }
+
+        // 构建请求内容
+        Integer eventId = requestJson.getInteger("event_id");
+        int rank = Integer.parseInt(requestJson.getString("rank"));
+        EventRequest eventRequest = new EventRequest();
+        eventRequest.setEventId(eventId);
+        eventRequest.setRank(rank);
+        eventRequest.setType(type);
+        eventRequest.setUserId(userId);
+        eventRequest.setRequestHeaders(JSON.toJSONString(requestHeaders));
+        eventRequest.setRequestData(originRequestData);
+
+        // 入库请求信息
+        Dao.insertEventRequest(eventRequest);
+
+        if (!responseJson.containsKey("items")) {
+            log.error("Invalid eventRequest response");
+            return;
+        }
+        JSONArray items = responseJson.getJSONArray("items");
+        JSONObject item = items.getJSONObject(items.size() - 1);
+        if (!item.containsKey("rank") || !item.containsKey("score")) {
+            log.error("Invalid eventRequest response");
+            return;
+        }
+        int finalRank = item.getInteger("rank");
+        int score = item.getInteger("score");
+        if (finalRank != rank) {
+            log.error("Invalid eventRequest response");
+            return;
+        }
+
+        EventRank eventRank = new EventRank();
+        eventRank.setEventId(eventId);
+        eventRank.setRank(rank);
+        eventRank.setType(type);
+        eventRank.setScore(score);
+
+        // 入库排名信息
+        Dao.insertEventRank(eventRank);
 
     }
 
@@ -756,6 +824,9 @@ public class Resolver {
                         stage = 2;
                     }
                 } else if (stage == 2) {
+                    if (KEY_REQUEST_DATA.equals(key)) {
+                        jsonObject.put(KEY_ORIGIN_REQUEST_DATA, line);
+                    }
                     try {
                         // 尝试以JSON模式进行解析，若失败则当做字符串
                         JSONObject jsonObjectValue = JSON.parseObject(line);

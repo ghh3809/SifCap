@@ -22,6 +22,7 @@ public class HttpData {
     private String host;
     private String requestUrl;
     private Map<String, String> headers;
+    private String originRequestData;
 
     public HttpData(String srcIp, String dstIp, int source, int destination, long seq, long ack, List<Byte> payloadList,
                     String contentEncoding, int contentLength, String contentType, int currentLength, String host,
