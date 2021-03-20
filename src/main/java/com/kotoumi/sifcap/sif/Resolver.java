@@ -93,14 +93,14 @@ public class Resolver {
             LoggerHelper.logInput("UserId: " + userId);
 
         } catch (Exception e) {
-            log.error("Resolve requestResponsePair failed");
+            log.error("Resolve requestResponsePair failed", e);
             return;
         }
 
         try {
             process(userId, requestUrl, requestJson, responseJson, requestHeaders);
         } catch (Exception e) {
-            log.error("Process requestResponsePair failed");
+            log.error("Process requestResponsePair failed", e);
         }
 
     }
@@ -300,7 +300,7 @@ public class Resolver {
                 }
             }
         } catch (Exception e) {
-            log.error("Resolve birth failed!");
+            log.error("Resolve birth failed!", e);
         }
 
         // 入库
@@ -511,7 +511,7 @@ public class Resolver {
             }
 
         } catch (Exception e) {
-            log.error("Resolve live play info failed");
+            log.error("Resolve live play info failed", e);
         }
 
         // 入库
@@ -612,7 +612,7 @@ public class Resolver {
             }
 
         } catch (Exception e) {
-            log.error("Resolve live play info failed");
+            log.error("Resolve live play info failed", e);
         }
 
         // 入库

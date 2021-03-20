@@ -71,8 +71,8 @@ public class PacketHandler<T> implements PcapPacketHandler<T> {
         }
 
         try {
-            // 拦截所有tcp信息，并且要求其负载不为空
-            if (pack.hasHeader(ip4) && pack.hasHeader(tcp) && tcp.getPayload().length > 0) {
+            // 拦截所有tcp信息，并且要求其负载不为空（该限制已移除，因为要适配chunked的情况）
+            if (pack.hasHeader(ip4) && pack.hasHeader(tcp)) {
 
                 // 获取IP
                 String dstIp = FormatUtils.ip(ip4.destination());
@@ -118,16 +118,13 @@ public class PacketHandler<T> implements PcapPacketHandler<T> {
                     String requestUrl = http.fieldValue(Http.Request.RequestUrl);
                     String contentEncoding = http.fieldValue(Http.Response.Content_Encoding);
                     String contentLengthString = http.fieldValue(Http.Response.Content_Length);
-                    if (contentLengthString == null) {
-                        log.debug("Ignore packet without content length");
-                        if (srcIp.equals(LOCAL_IP)) {
-                            IGNORE_PORT.put(source, System.currentTimeMillis());
-                        } else {
-                            IGNORE_PORT.put(destination, System.currentTimeMillis());
-                        }
-                        return;
+                    // chunked的情况下，contentLength设为-1
+                    int contentLength;
+                    if (contentLengthString != null) {
+                        contentLength = Integer.parseInt(contentLengthString);
+                    } else {
+                        contentLength = -1;
                     }
-                    int contentLength = Integer.parseInt(contentLengthString);
                     String contentType = http.fieldValue(Http.Response.Content_Type);
                     log.debug("HTTP Content-Encoding: {}, Content-Length: {}, Content-Type: {}",
                             contentEncoding, contentLength, contentType);
@@ -158,12 +155,20 @@ public class PacketHandler<T> implements PcapPacketHandler<T> {
 
                     // 获取payload，并转化为一个其他位置为null的list
                     byte[] payload = http.getPayload();
-                    List<Byte> payloadList = new ArrayList<>(contentLength);
-                    for (int i = 0; i < contentLength; i ++) {
-                        if (i < payload.length) {
-                            payloadList.add(payload[i]);
-                        } else {
-                            payloadList.add(null);
+                    List<Byte> payloadList;
+                    if (contentLength > 0) {
+                        payloadList = new ArrayList<>(contentLength);
+                        for (int i = 0; i < contentLength; i ++) {
+                            if (i < payload.length) {
+                                payloadList.add(payload[i]);
+                            } else {
+                                payloadList.add(null);
+                            }
+                        }
+                    } else {
+                        payloadList = new ArrayList<>();
+                        for (byte b : payload) {
+                            payloadList.add(b);
                         }
                     }
 
@@ -209,10 +214,23 @@ public class PacketHandler<T> implements PcapPacketHandler<T> {
                         requestResponsePair.setResponse(httpData);
 
                         // 判断是否已经完成
-                        if (requestResponsePair.getResponse().getCurrentLength() >=
-                                requestResponsePair.getResponse().getContentLength()) {
-                            log.debug("HTTP request response pair resolve finish!");
-                            Resolver.resolve(PAIR_MAP.remove(destination));
+                        if (requestResponsePair.getResponse().getContentLength() > 0) {
+                            if (requestResponsePair.getResponse().getCurrentLength() >=
+                                    requestResponsePair.getResponse().getContentLength()) {
+                                log.debug("HTTP request response pair resolve finish!");
+                                if (PAIR_MAP.containsKey(destination)) {
+                                    Resolver.resolve(PAIR_MAP.remove(destination));
+                                } else {
+                                    log.error("Destination not found: {}", destination);
+                                }
+                            }
+                        } else if (payload.length == 0) {
+                            log.debug("HTTP request response pair resolve finish(chunked)!");
+                            if (PAIR_MAP.containsKey(destination)) {
+                                Resolver.resolve(PAIR_MAP.remove(destination));
+                            } else {
+                                log.error("Destination not found: {}", destination);
+                            }
                         }
 
                     }
@@ -229,25 +247,45 @@ public class PacketHandler<T> implements PcapPacketHandler<T> {
                             log.error("Could not find source: {}", source);
                             return;
                         }
-                        httpData = PAIR_MAP.get(source).getRequest();
+                        if (PAIR_MAP.containsKey(source)) {
+                            httpData = PAIR_MAP.get(source).getRequest();
+                        } else {
+                            log.error("Source not found: {}", source);
+                            return;
+                        }
                     } else {
                         if (!PAIR_MAP.containsKey(destination)) {
                             log.error("Could not find destination: {}", destination);
                             return;
                         }
-                        httpData = PAIR_MAP.get(destination).getResponse();
+                        if (PAIR_MAP.containsKey(destination)) {
+                            httpData = PAIR_MAP.get(destination).getResponse();
+                        } else {
+                            log.error("Destination not found: {}", source);
+                            return;
+                        }
                     }
 
-                    // 更新payload
+                    // 仅在contentLength > 0时校验长度
+                    if (httpData == null) {
+                        log.error("httpData is null");
+                        return;
+                    }
                     long seqDiff = seq - httpData.getSeq();
-                    if (seqDiff < 0 || seqDiff + payload.length > httpData.getContentLength()) {
+                    if (seqDiff < 0 || (httpData.getContentLength() > 0 &&
+                            seqDiff + payload.length > httpData.getContentLength())) {
                         log.error("seq not match, start: {}, current: {}, length: {}",
                                 httpData.getSeq(), seq, payload.length);
                         return;
                     }
+
+                    // 更新payload
                     int sizeCount = 0;
                     for (int i = 0; i < payload.length; i ++) {
                         int index = (int) (seqDiff + i);
+                        while (httpData.getPayloadList().size() < index + 1) {
+                            httpData.getPayloadList().add(null);
+                        }
                         if (httpData.getPayloadList().get(index) == null) {
                             sizeCount ++;
                         }
@@ -259,16 +297,23 @@ public class PacketHandler<T> implements PcapPacketHandler<T> {
                     log.debug("Total receive length: {}", httpData.getCurrentLength());
 
                     // 判断是否已经完成
-                    if (dstIp.equals(LOCAL_IP) && httpData.getCurrentLength() >= httpData.getContentLength()) {
-                        log.info("HTTP request response pair resolve finish!");
-                        Resolver.resolve(PAIR_MAP.remove(destination));
+                    if (dstIp.equals(LOCAL_IP)) {
+                        if (httpData.getContentLength() > 0) {
+                            if (httpData.getCurrentLength() >= httpData.getContentLength()) {
+                                log.info("HTTP request response pair resolve finish!");
+                                Resolver.resolve(PAIR_MAP.remove(destination));
+                            }
+                        } else if (payload.length == 0) {
+                            log.info("HTTP request response pair resolve finish(chunked)!");
+                            Resolver.resolve(PAIR_MAP.remove(destination));
+                        }
                     }
 
                 }
 
             }
         } catch (Exception e) {
-            log.error("Resolve packet exception: {}", e.fillInStackTrace().toString());
+            log.error("Resolve packet exception", e);
         }
 
     }
